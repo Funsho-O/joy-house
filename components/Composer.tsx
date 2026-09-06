@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { IconUser, IconUserOff } from "@tabler/icons-react";
 import { CATEGORIES, type Category } from "@/lib/types";
 import { createPost } from "@/app/actions/posts";
 
@@ -57,17 +58,33 @@ export function Composer({ open }: { open: boolean }) {
           ))}
         </div>
       </div>
-      <div className="anon-row">
-        <button
-          type="button"
-          className={`toggle${anonymous ? " on" : ""}`}
-          role="switch"
-          aria-checked={anonymous}
-          onClick={() => setAnonymous((v) => !v)}
-        >
-          <span className="toggle-knob" />
-        </button>
-        <span className="anon-label">{anonymous ? "Post anonymously" : "Post as yourself"}</span>
+      <div className="form-row">
+        <span className="form-label">Visibility</span>
+        <div className="anon-options" role="group" aria-label="Post visibility">
+          <button
+            type="button"
+            className={`anon-option${!anonymous ? " selected" : ""}`}
+            aria-pressed={!anonymous}
+            onClick={() => setAnonymous(false)}
+          >
+            <IconUser size={15} />
+            Post as yourself
+          </button>
+          <button
+            type="button"
+            className={`anon-option${anonymous ? " selected" : ""}`}
+            aria-pressed={anonymous}
+            onClick={() => setAnonymous(true)}
+          >
+            <IconUserOff size={15} />
+            Anonymous
+          </button>
+        </div>
+        <p className="anon-hint">
+          {anonymous
+            ? "Your name and photo stay hidden. Shown as Member."
+            : "Your display name and photo will appear on this post."}
+        </p>
       </div>
       <button className="submit-btn" type="submit" disabled={pending}>
         {pending ? "Posting..." : "Post to community"}
