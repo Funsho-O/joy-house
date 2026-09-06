@@ -36,7 +36,7 @@ export function ReportModal({
         {done ? (
           <>
             <h2>Thanks — we received it</h2>
-            <p>Leaders will review this in the admin queue.</p>
+            <p>Admins will review this in the admin queue.</p>
             <div className="modal-actions">
               <button className="btn-primary" type="button" onClick={onClose}>
                 Close
@@ -46,7 +46,7 @@ export function ReportModal({
         ) : (
           <form action={onSubmit}>
             <h2>Report this {targetType}</h2>
-            <p>Tell the leaders why this should be reviewed. Your name is included for pastoral follow-up.</p>
+            <p>Tell the admins why this should be reviewed. Your name is included for follow-up.</p>
             {error ? <div className="banner-error">{error}</div> : null}
             <textarea
               className="form-input form-textarea tall"

@@ -5,6 +5,13 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
 
+function storageMessage(message: string) {
+  if (/bucket not found/i.test(message)) {
+    return "Photo storage is not set up yet. In Supabase, open the SQL editor and run supabase/avatars.sql.";
+  }
+  return message;
+}
+
 const AVATAR_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -40,7 +47,7 @@ export function AvatarEditor({
           const { error: removeError } = await supabase.storage
             .from("avatars")
             .remove(existing.map((item) => `${profile.id}/${item.name}`));
-          if (removeError) throw new Error(removeError.message);
+          if (removeError) throw new Error(storageMessage(removeError.message));
         }
 
         const path = `${profile.id}/avatar.${ext}`;
@@ -49,7 +56,7 @@ export function AvatarEditor({
           contentType: file.type,
           cacheControl: "3600",
         });
-        if (uploadError) throw new Error(uploadError.message);
+        if (uploadError) throw new Error(storageMessage(uploadError.message));
 
         const { data } = supabase.storage.from("avatars").getPublicUrl(path);
         await saveAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);

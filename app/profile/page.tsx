@@ -18,9 +18,7 @@ export default async function ProfilePage() {
       </a>
       <div className="auth-card">
         <h1 className="auth-title">Your profile</h1>
-        <p className="auth-sub">
-          This name is shown on posts unless you post anonymously. Leaders can still see who wrote anonymous posts.
-        </p>
+        <p className="auth-sub">This name is shown on posts unless you post anonymously.</p>
         <AvatarEditor profile={profile} saveAvatarUrl={saveAvatarUrl} removeAvatar={removeAvatar} />
         <form action={updateDisplayName}>
           <div className="form-row">

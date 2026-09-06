@@ -24,7 +24,7 @@ type CommentRow = {
 };
 
 function displayName(
-  post: Pick<VisiblePost, "is_anonymous" | "author_id">,
+  post: Pick<VisiblePost, "is_anonymous">,
   profile: Pick<Profile, "display_name"> | null,
   isAdmin: boolean,
   adminProfile: Pick<Profile, "display_name"> | null
@@ -55,9 +55,7 @@ async function hydratePosts(
 
   const ids = rows.map((row) => row.id);
   const authorIds = Array.from(
-    new Set(
-      rows.flatMap((row) => [row.author_id, row.admin_author_id].filter(Boolean) as string[])
-    )
+    new Set(rows.flatMap((row) => [row.author_id, row.admin_author_id].filter(Boolean) as string[]))
   );
 
   const [{ data: profiles }, { data: comments }, { data: myLikes }, { data: recentLikes }] =
@@ -126,8 +124,6 @@ async function hydratePosts(
       author_id: row.author_id,
       author_name: displayName(row, profile, isAdmin, adminProfile),
       author_avatar_url: displayAvatar(row, profile, isAdmin, adminProfile),
-      admin_author_name:
-        row.is_anonymous && isAdmin ? adminProfile?.display_name || null : null,
       comment_count: postComments.length,
       liked_by_me: liked.has(row.id),
       preview_comments: preview,

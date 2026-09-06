@@ -30,7 +30,6 @@ export type PostCardData = {
   author_id: string | null;
   author_name: string;
   author_avatar_url: string | null;
-  admin_author_name: string | null;
   comment_count: number;
   liked_by_me: boolean;
   preview_comments: PreviewComment[];
