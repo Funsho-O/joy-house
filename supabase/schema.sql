@@ -23,6 +23,7 @@ create table if not exists public.profiles (
   display_name text not null,
   avatar_url text,
   role public.user_role not null default 'member',
+  push_enabled boolean not null default true,
   created_at timestamptz not null default now()
 );
 
@@ -35,7 +36,8 @@ create table if not exists public.posts (
   is_anonymous boolean not null default false,
   created_at timestamptz not null default now(),
   like_count integer not null default 0,
-  is_pinned boolean not null default false
+  is_pinned boolean not null default false,
+  image_url text
 );
 
 create table if not exists public.comments (
@@ -233,7 +235,8 @@ select
   case
     when public.is_admin() then p.author_id
     else null
-  end as admin_author_id
+  end as admin_author_id,
+  p.image_url
 from public.posts p;
 
 grant select on public.posts_visible to authenticated;
@@ -447,6 +450,66 @@ create policy "verified members delete own avatar"
     and (storage.foldername(name))[1] = auth.uid()::text
     and public.is_verified()
   );
+
+-- Post photos (optional, one per post). Full copy also lives in post-images.sql.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'post-images',
+  'post-images',
+  true,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "post images are publicly readable" on storage.objects;
+create policy "post images are publicly readable"
+  on storage.objects for select
+  using (bucket_id = 'post-images');
+
+drop policy if exists "verified members upload own post image" on storage.objects;
+create policy "verified members upload own post image"
+  on storage.objects for insert
+  to authenticated
+  with check (
+    bucket_id = 'post-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+    and public.is_verified()
+  );
+
+drop policy if exists "verified members update own post image" on storage.objects;
+create policy "verified members update own post image"
+  on storage.objects for update
+  to authenticated
+  using (
+    bucket_id = 'post-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+    and public.is_verified()
+  )
+  with check (
+    bucket_id = 'post-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+    and public.is_verified()
+  );
+
+drop policy if exists "verified members delete own post image" on storage.objects;
+create policy "verified members delete own post image"
+  on storage.objects for delete
+  to authenticated
+  using (
+    bucket_id = 'post-images'
+    and (storage.foldername(name))[1] = auth.uid()::text
+    and public.is_verified()
+  );
+
+drop policy if exists "admins delete any post image" on storage.objects;
+create policy "admins delete any post image"
+  on storage.objects for delete
+  to authenticated
+  using (bucket_id = 'post-images' and public.is_admin());
 
 -- Groups (private feeds). Full copy also lives in groups.sql for existing projects.
 
@@ -720,6 +783,106 @@ where not exists (
   select 1 from public.groups g
   where lower(trim(g.name)) = lower(trim(v.name))
 );
+
+-- Web Push subscriptions. Full copy also lives in push-notifications.sql.
+alter table public.profiles
+  add column if not exists push_enabled boolean not null default true;
+
+create table if not exists public.push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references public.profiles(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists push_subscriptions_user_id_idx
+  on public.push_subscriptions (user_id);
+
+alter table public.push_subscriptions enable row level security;
+
+drop policy if exists "users read own push subscriptions" on public.push_subscriptions;
+create policy "users read own push subscriptions"
+  on public.push_subscriptions for select
+  to authenticated
+  using (user_id = auth.uid() and public.is_verified());
+
+drop policy if exists "users insert own push subscriptions" on public.push_subscriptions;
+create policy "users insert own push subscriptions"
+  on public.push_subscriptions for insert
+  to authenticated
+  with check (user_id = auth.uid() and public.is_verified());
+
+drop policy if exists "users update own push subscriptions" on public.push_subscriptions;
+create policy "users update own push subscriptions"
+  on public.push_subscriptions for update
+  to authenticated
+  using (user_id = auth.uid() and public.is_verified())
+  with check (user_id = auth.uid() and public.is_verified());
+
+drop policy if exists "users delete own push subscriptions" on public.push_subscriptions;
+create policy "users delete own push subscriptions"
+  on public.push_subscriptions for delete
+  to authenticated
+  using (user_id = auth.uid() and public.is_verified());
+
+create or replace function public.upsert_push_subscription(
+  target_endpoint text,
+  target_p256dh text,
+  target_auth text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null or not public.is_verified() then
+    raise exception 'Not allowed';
+  end if;
+
+  insert into public.push_subscriptions (user_id, endpoint, p256dh, auth)
+  values (auth.uid(), target_endpoint, target_p256dh, target_auth)
+  on conflict (endpoint) do update
+    set user_id = excluded.user_id,
+        p256dh = excluded.p256dh,
+        auth = excluded.auth;
+end;
+$$;
+
+create or replace function public.get_push_subscriptions(target_user_id uuid)
+returns table (endpoint text, p256dh text, auth text)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select s.endpoint, s.p256dh, s.auth
+  from public.push_subscriptions s
+  join public.profiles p on p.id = s.user_id
+  where s.user_id = target_user_id
+    and p.push_enabled = true
+    and public.is_verified();
+$$;
+
+create or replace function public.delete_stale_push_subscription(target_endpoint text)
+returns void
+language sql
+security definer
+set search_path = public
+as $$
+  delete from public.push_subscriptions
+  where endpoint = target_endpoint;
+$$;
+
+revoke all on function public.upsert_push_subscription(text, text, text) from public;
+revoke all on function public.get_push_subscriptions(uuid) from public;
+revoke all on function public.delete_stale_push_subscription(text) from public;
+
+grant execute on function public.upsert_push_subscription(text, text, text) to authenticated;
+grant execute on function public.get_push_subscriptions(uuid) to authenticated;
+grant execute on function public.delete_stale_push_subscription(text) to authenticated;
 
 -- First admin: after you sign up, run:
 -- update public.profiles set role = 'admin' where id = '<your-user-uuid>';

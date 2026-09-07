@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ColourStrip } from "@/components/Brand";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { PushPrompt } from "@/components/PushPrompt";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="app">
           <ColourStrip />
           {children}
+          <PushPrompt />
         </div>
       </body>
     </html>

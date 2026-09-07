@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin, requireVerifiedUser } from "@/lib/auth";
 import { CATEGORIES, type Category } from "@/lib/types";
 import { assertCleanText } from "@/lib/profanity";
+import { assertOwnPostImageUrl, postImagePathFromUrl, postImageSetupMessage } from "@/lib/post-image";
 
 function asCategory(value: string): Category {
   if ((CATEGORIES as readonly string[]).includes(value)) return value as Category;
@@ -16,9 +17,11 @@ export async function createPost(formData: FormData) {
   const body = String(formData.get("body") || "").trim();
   const category = asCategory(String(formData.get("category") || "General"));
   const isAnonymous = String(formData.get("is_anonymous") || "") === "true";
+  const imageUrl = String(formData.get("image_url") || "").trim() || null;
 
   if (!title) throw new Error("Please add a title.");
   assertCleanText(title, body);
+  if (imageUrl) assertOwnPostImageUrl(imageUrl, profile.id);
 
   const { error } = await supabase.from("posts").insert({
     title,
@@ -26,13 +29,14 @@ export async function createPost(formData: FormData) {
     category,
     author_id: profile.id,
     is_anonymous: isAnonymous,
+    ...(imageUrl ? { image_url: imageUrl } : {}),
   });
 
   if (error) {
     if (error.message.toLowerCase().includes("rate limit")) {
       throw new Error("Slow down — you can post at most 5 times per hour.");
     }
-    throw new Error(error.message);
+    throw new Error(postImageSetupMessage(error.message));
   }
 
   revalidatePath("/");
@@ -56,10 +60,13 @@ export async function updatePost(formData: FormData) {
 
 export async function deletePost(postId: string) {
   const { supabase, profile, isAdmin } = await requireVerifiedUser();
+  const { data: existing } = await supabase.from("posts").select("image_url").eq("id", postId).maybeSingle();
   let query = supabase.from("posts").delete().eq("id", postId);
   if (!isAdmin) query = query.eq("author_id", profile.id);
   const { error } = await query;
   if (error) throw new Error(error.message);
+  const path = existing?.image_url ? postImagePathFromUrl(existing.image_url) : null;
+  if (path) await supabase.storage.from("post-images").remove([path]);
   revalidatePath("/");
   revalidatePath(`/posts/${postId}`);
 }

@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { updateDisplayName } from "@/app/actions/account";
 import { removeAvatar, saveAvatarUrl } from "@/app/actions/avatar";
 import { AvatarEditor } from "@/components/AvatarEditor";
+import { NotificationSettings } from "@/components/NotificationSettings";
 
 export default async function ProfilePage() {
   const { profile, groups } = await getAuthContext();
@@ -20,6 +21,7 @@ export default async function ProfilePage() {
         <h1 className="auth-title">Your profile</h1>
         <p className="auth-sub">This name is shown on posts unless you post anonymously.</p>
         <AvatarEditor profile={profile} saveAvatarUrl={saveAvatarUrl} removeAvatar={removeAvatar} />
+        <NotificationSettings profile={profile} />
         <form action={updateDisplayName}>
           <div className="form-row">
             <label className="form-label" htmlFor="display_name">

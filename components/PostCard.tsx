@@ -14,6 +14,7 @@ import { categoryClass, relativeTime } from "@/lib/format";
 import type { PostCardData, Profile } from "@/lib/types";
 import { ReportModal } from "@/components/ReportModal";
 import { UserAvatar } from "@/components/UserAvatar";
+import { PostImage } from "@/components/PostImage";
 
 export function PostCard({
   post,
@@ -69,6 +70,7 @@ export function PostCard({
         <h2 className="post-title">{post.title}</h2>
         {post.body ? <p className="post-body">{post.body}</p> : <div className="post-body" />}
       </a>
+      {post.image_url ? <PostImage src={post.image_url} alt="" /> : null}
       <div className="post-footer">
         <button className={`action-btn${liked ? " liked" : ""}`} type="button" onClick={onLike}>
           {liked ? <IconHeartFilled size={15} /> : <IconHeart size={15} />} {likes}

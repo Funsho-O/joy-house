@@ -8,6 +8,7 @@ export type Profile = {
   display_name: string;
   avatar_url: string | null;
   role: UserRole;
+  push_enabled: boolean;
 };
 
 export type PreviewComment = {
@@ -34,6 +35,7 @@ export type PostCardData = {
   liked_by_me: boolean;
   preview_comments: PreviewComment[];
   likes_last_24h: number;
+  image_url: string | null;
 };
 
 export type CommentNode = {

@@ -9,6 +9,7 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Email/password signup with verification before access, plus Google sign-in
 - Feed sorted by newest, category filters, and Trending (most likes in the last 24 hours)
 - Optional profile photos on the Profile page; initials are used if someone skips it
+- Optional photo on each community post (one image, up to 5MB)
 - Anonymous posts: public name is “Member”; author ID stays in the database for admins
 - Private groups (Youth Leadership and Choir) with their own feeds; admins add members
 - Nested comments, likes (one per member per post), report queue
@@ -16,6 +17,7 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Rate limit: 5 posts per member per hour
 - Basic profanity filter on posts, comments, and reports
 - PWA: Add to Home Screen using the Joy House logo
+- Web Push on Android: notify members when someone replies to their post or comment
 
 ## 1. Create a Supabase project
 
@@ -29,7 +31,9 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 4. SQL editor: paste and run `supabase/schema.sql`.
 5. If this project already existed before profile photos, also run `supabase/avatars.sql`.
 6. If this project already existed before groups, also run `supabase/groups.sql`.
-7. After you sign up, promote yourself:
+7. If this project already existed before post photos, also run `supabase/post-images.sql`.
+8. If this project already existed before Web Push, also run `supabase/push-notifications.sql`.
+9. After you sign up, promote yourself:
 
 ```sql
 update public.profiles
@@ -52,6 +56,15 @@ Fill in:
 NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
+VAPID_SUBJECT=mailto:you@example.com
+```
+
+Generate VAPID keys once and reuse the same pair in every environment (changing them invalidates existing subscriptions):
+
+```bash
+npx web-push generate-vapid-keys
 ```
 
 Then:
@@ -67,13 +80,13 @@ Open [http://localhost:3000](http://localhost:3000).
 
 1. Push this folder to a Git repository.
 2. Import the repo in Vercel. Framework preset: Next.js.
-3. Add the same three environment variables. Set `NEXT_PUBLIC_SITE_URL` to `https://<your-domain>`.
+3. Add the same environment variables, including the VAPID keys. Set `NEXT_PUBLIC_SITE_URL` to `https://<your-domain>`.
 4. In Supabase, add the production Site URL and `/auth/callback` redirect.
 5. Point the Cloudflare domain to Vercel (CNAME to `cname.vercel-dns.com`, or Cloudflare for SaaS). HTTPS is automatic on Vercel.
 
 ## Security model
 
-Row Level Security is on for `profiles`, `posts`, `comments`, `likes`, `reports`, `groups`, `group_members`, `group_posts`, `group_comments`, and `group_likes`.
+Row Level Security is on for `profiles`, `posts`, `comments`, `likes`, `reports`, `groups`, `group_members`, `group_posts`, `group_comments`, `group_likes`, and `push_subscriptions`.
 
 - Only verified members (confirmed email) can read or write community content.
 - Members can edit/delete only their own posts and comments.
@@ -86,6 +99,8 @@ Do not put the Supabase **service role** key in this app. The anon key plus RLS 
 ## PWA
 
 `public/manifest.json` and `public/sw.js` are registered on load. On iPhone: Share → Add to Home Screen. On Android: Chrome menu → Install app / Add to Home Screen.
+
+Signed-in members are asked for notification permission on first visit. They can change that later on the Profile page. Replies to a post or comment send a Web Push to the author’s subscribed Android devices. Keep the VAPID private key on the server only.
 
 ## Project layout
 

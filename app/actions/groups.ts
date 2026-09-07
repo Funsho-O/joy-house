@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireVerifiedUser } from "@/lib/auth";
 import { assertCleanText } from "@/lib/profanity";
+import { notifyReply } from "@/lib/push";
 
 function revalidateGroup(groupId: string, postId?: string) {
   revalidatePath("/groups");
@@ -140,6 +141,44 @@ export async function createGroupComment(formData: FormData) {
     author_id: profile.id,
   });
   if (error) throw new Error(error.message);
+
+  try {
+    const url = `/groups/${groupId}/posts/${postId}`;
+    if (parentId) {
+      const { data: parent } = await supabase
+        .from("group_comments")
+        .select("author_id")
+        .eq("id", parentId)
+        .maybeSingle();
+      if (parent?.author_id) {
+        await notifyReply({
+          supabase,
+          recipientId: parent.author_id,
+          actorId: profile.id,
+          actorName: profile.display_name,
+          url,
+          kind: "comment",
+          commentBody: body,
+        });
+      }
+    } else {
+      const { data: post } = await supabase.from("group_posts").select("author_id").eq("id", postId).maybeSingle();
+      if (post?.author_id) {
+        await notifyReply({
+          supabase,
+          recipientId: post.author_id,
+          actorId: profile.id,
+          actorName: profile.display_name,
+          url,
+          kind: "post",
+          commentBody: body,
+        });
+      }
+    }
+  } catch {
+    // Comment already saved; a failed push should not roll it back.
+  }
+
   revalidateGroup(groupId || "", postId);
 }
 

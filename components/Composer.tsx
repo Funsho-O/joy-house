@@ -1,15 +1,80 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { IconUser, IconUserOff } from "@tabler/icons-react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { IconPhoto, IconUser, IconUserOff, IconX } from "@tabler/icons-react";
 import { CATEGORIES, type Category } from "@/lib/types";
 import { createPost } from "@/app/actions/posts";
+import { createClient } from "@/lib/supabase/client";
+import {
+  POST_IMAGE_MAX_BYTES,
+  POST_IMAGE_TOO_LARGE,
+  POST_IMAGE_TYPES,
+  postImageSetupMessage,
+} from "@/lib/post-image";
 
 export function Composer({ open }: { open: boolean }) {
   const [category, setCategory] = useState<Category>("General");
   const [anonymous, setAnonymous] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!file) {
+      setPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  function clearImage() {
+    setFile(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
+  function onPick(picked: File | undefined) {
+    if (!picked) return;
+    if (picked.size > POST_IMAGE_MAX_BYTES) {
+      setError(POST_IMAGE_TOO_LARGE);
+      clearImage();
+      return;
+    }
+    if (!POST_IMAGE_TYPES[picked.type]) {
+      setError("Use a JPG, PNG, WebP, or GIF.");
+      clearImage();
+      return;
+    }
+    setError(null);
+    setFile(picked);
+  }
+
+  async function uploadImage(image: File) {
+    const ext = POST_IMAGE_TYPES[image.type];
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) throw new Error("Please sign in to attach a photo.");
+
+    const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage.from("post-images").upload(path, image, {
+      contentType: image.type,
+      cacheControl: "3600",
+    });
+    if (uploadError) throw new Error(postImageSetupMessage(uploadError.message));
+    return supabase.storage.from("post-images").getPublicUrl(path).data.publicUrl;
+  }
+
+  function resetComposer() {
+    (document.getElementById("postTitle") as HTMLInputElement | null)?.form?.reset();
+    setAnonymous(false);
+    setCategory("General");
+    clearImage();
+  }
 
   function onSubmit(formData: FormData) {
     formData.set("category", category);
@@ -17,10 +82,12 @@ export function Composer({ open }: { open: boolean }) {
     setError(null);
     startTransition(async () => {
       try {
+        if (file) {
+          if (file.size > POST_IMAGE_MAX_BYTES) throw new Error(POST_IMAGE_TOO_LARGE);
+          formData.set("image_url", await uploadImage(file));
+        }
         await createPost(formData);
-        (document.getElementById("postTitle") as HTMLInputElement | null)?.form?.reset();
-        setAnonymous(false);
-        setCategory("General");
+        resetComposer();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not publish that post.");
       }
@@ -42,6 +109,30 @@ export function Composer({ open }: { open: boolean }) {
           Body (optional)
         </label>
         <textarea className="form-input form-textarea" id="postBody" name="body" placeholder="Share more details..." />
+      </div>
+      <div className="form-row">
+        <span className="form-label">Photo (optional)</span>
+        <input
+          ref={inputRef}
+          className="sr-only"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          onChange={(event) => onPick(event.target.files?.[0])}
+        />
+        {preview ? (
+          <div className="composer-image">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={preview} alt="" />
+            <button className="composer-image-remove" type="button" onClick={clearImage} aria-label="Remove photo">
+              <IconX size={14} />
+            </button>
+          </div>
+        ) : (
+          <button className="composer-attach" type="button" onClick={() => inputRef.current?.click()}>
+            <IconPhoto size={16} /> Add a photo
+          </button>
+        )}
+        <p className="anon-hint">One image, up to 5MB.</p>
       </div>
       <div className="form-row">
         <span className="form-label">Category</span>

@@ -9,11 +9,22 @@ export async function getAuthContext() {
 
   if (!user) return { supabase, user: null, profile: null, isAdmin: false, groups: [] as GroupSummary[] };
 
-  const { data: profile } = await supabase
+  let { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url, role")
+    .select("id, display_name, avatar_url, role, push_enabled")
     .eq("id", user.id)
     .maybeSingle();
+
+  if (profileError) {
+    const retry = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url, role")
+      .eq("id", user.id)
+      .maybeSingle();
+    profile = retry.data ? { ...retry.data, push_enabled: true } : null;
+  } else if (profile && profile.push_enabled == null) {
+    profile = { ...profile, push_enabled: true };
+  }
 
   let groups: GroupSummary[] = [];
   if (profile) {

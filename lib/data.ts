@@ -10,6 +10,7 @@ type VisiblePost = {
   created_at: string;
   like_count: number;
   is_pinned: boolean;
+  image_url: string | null;
   author_id: string | null;
   admin_author_id: string | null;
 };
@@ -128,6 +129,7 @@ async function hydratePosts(
       liked_by_me: liked.has(row.id),
       preview_comments: preview,
       likes_last_24h: likes24.get(row.id) || 0,
+      image_url: row.image_url || null,
     };
   });
 }
