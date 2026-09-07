@@ -4,14 +4,15 @@ import { useEffect, useState } from "react";
 import { editWindowRemaining, formatEditCountdown } from "@/lib/edit-window";
 
 export function useEditWindow(createdAt: string, enabled = true) {
-  const [remaining, setRemaining] = useState(() => (enabled ? editWindowRemaining(createdAt) : 0));
+  const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
     if (!enabled) {
       setRemaining(0);
       return;
     }
-    setRemaining(editWindowRemaining(createdAt));
+    const tick = () => setRemaining(editWindowRemaining(createdAt));
+    tick();
     const id = window.setInterval(() => {
       const next = editWindowRemaining(createdAt);
       setRemaining(next);
@@ -20,15 +21,16 @@ export function useEditWindow(createdAt: string, enabled = true) {
     return () => window.clearInterval(id);
   }, [createdAt, enabled]);
 
+  const canEdit = Boolean(enabled && remaining && remaining > 0);
   return {
-    canEdit: enabled && remaining > 0,
-    remaining,
-    label: formatEditCountdown(remaining),
+    canEdit,
+    remaining: remaining ?? 0,
+    note: canEdit ? `You can edit for ${formatEditCountdown(remaining as number)}` : null,
   };
 }
 
 export function EditWindowNote({ createdAt, enabled = true }: { createdAt: string; enabled?: boolean }) {
-  const { canEdit, label } = useEditWindow(createdAt, enabled);
-  if (!canEdit) return null;
-  return <span className="edit-window-note">You can edit for {label}</span>;
+  const { note } = useEditWindow(createdAt, enabled);
+  if (!note) return null;
+  return <span className="edit-window-note">{note}</span>;
 }

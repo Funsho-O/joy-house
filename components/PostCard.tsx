@@ -85,7 +85,7 @@ export function PostCard({
                 Edited
               </span>
             ) : null}
-            {canEdit ? <span className="edit-window-note">You can edit for {editWindow.label}</span> : null}
+            {editWindow.note ? <span className="edit-window-note">{editWindow.note}</span> : null}
           </div>
         </div>
         {post.is_anonymous ? <span className="anon-badge">Anonymous</span> : null}
@@ -143,7 +143,7 @@ export function PostCard({
             <button className="btn-primary" type="submit">
               Save
             </button>
-            <span className="edit-window-note">You can edit for {editWindow.label}</span>
+            {editWindow.note ? <span className="edit-window-note">{editWindow.note}</span> : null}
           </div>
         </form>
       ) : (

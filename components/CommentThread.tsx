@@ -95,7 +95,7 @@ function CommentItem({
                 <button className="btn-primary" type="submit" disabled={pending}>
                   {pending ? "Saving..." : "Save"}
                 </button>
-                <span className="edit-window-note">You can edit for {editWindow.label}</span>
+                {editWindow.note ? <span className="edit-window-note">{editWindow.note}</span> : null}
               </div>
             </form>
           ) : (
@@ -107,7 +107,7 @@ function CommentItem({
           <div className="comment-meta">
             <span>{relativeTime(comment.created_at)}</span>
             <EditedLabel at={comment.edited_at} />
-            {canEdit ? <span className="edit-window-note">You can edit for {editWindow.label}</span> : null}
+            {editWindow.note ? <span className="edit-window-note">{editWindow.note}</span> : null}
             {depth < 4 ? (
               <button className="action-btn" type="button" onClick={() => setReplyOpen((v) => !v)}>
                 Reply
