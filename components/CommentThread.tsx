@@ -13,11 +13,17 @@ function CommentItem({
   postId,
   profile,
   depth,
+  onCreate,
+  onDelete,
+  allowReport,
 }: {
   comment: CommentNode;
   postId: string;
   profile: Profile;
   depth: number;
+  onCreate: (formData: FormData) => Promise<void>;
+  onDelete: (commentId: string, postId: string) => Promise<void>;
+  allowReport: boolean;
 }) {
   const [replyOpen, setReplyOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -41,9 +47,11 @@ function CommentItem({
                 Reply
               </button>
             ) : null}
+            {allowReport ? (
             <button className="action-btn" type="button" onClick={() => setReportOpen(true)}>
               <IconFlag size={13} /> Report
             </button>
+            ) : null}
             {canDelete ? (
               <button
                 className="action-btn danger"
@@ -52,7 +60,7 @@ function CommentItem({
                   if (!confirm("Delete this comment?")) return;
                   startTransition(async () => {
                     try {
-                      await deleteComment(comment.id, postId);
+                      await onDelete(comment.id, postId);
                     } catch (err) {
                       setError(err instanceof Error ? err.message : "Could not delete.");
                     }
@@ -73,7 +81,7 @@ function CommentItem({
                 setError(null);
                 startTransition(async () => {
                   try {
-                    await createComment(formData);
+                    await onCreate(formData);
                     setReplyOpen(false);
                   } catch (err) {
                     setError(err instanceof Error ? err.message : "Could not reply.");
@@ -92,11 +100,20 @@ function CommentItem({
       {comment.replies.length > 0 ? (
         <div className="comment-replies">
           {comment.replies.map((reply) => (
-            <CommentItem key={reply.id} comment={reply} postId={postId} profile={profile} depth={depth + 1} />
+            <CommentItem
+              key={reply.id}
+              comment={reply}
+              postId={postId}
+              profile={profile}
+              depth={depth + 1}
+              onCreate={onCreate}
+              onDelete={onDelete}
+              allowReport={allowReport}
+            />
           ))}
         </div>
       ) : null}
-      {reportOpen ? (
+      {allowReport && reportOpen ? (
         <ReportModal
           targetType="comment"
           postId={postId}
@@ -112,10 +129,16 @@ export function CommentThread({
   postId,
   comments,
   profile,
+  onCreate = createComment,
+  onDelete = deleteComment,
+  allowReport = true,
 }: {
   postId: string;
   comments: CommentNode[];
   profile: Profile;
+  onCreate?: (formData: FormData) => Promise<void>;
+  onDelete?: (commentId: string, postId: string) => Promise<void>;
+  allowReport?: boolean;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -131,7 +154,7 @@ export function CommentThread({
           setError(null);
           startTransition(async () => {
             try {
-              await createComment(formData);
+              await onCreate(formData);
               (document.getElementById("new-comment") as HTMLTextAreaElement | null)?.form?.reset();
             } catch (err) {
               setError(err instanceof Error ? err.message : "Could not comment.");
@@ -157,7 +180,16 @@ export function CommentThread({
         <div className="empty-state">No replies yet. Start the conversation.</div>
       ) : (
         comments.map((comment) => (
-          <CommentItem key={comment.id} comment={comment} postId={postId} profile={profile} depth={0} />
+          <CommentItem
+            key={comment.id}
+            comment={comment}
+            postId={postId}
+            profile={profile}
+            depth={0}
+            onCreate={onCreate}
+            onDelete={onDelete}
+            allowReport={allowReport}
+          />
         ))
       )}
     </section>

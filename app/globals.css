@@ -545,6 +545,66 @@ button, input, textarea, select { font-family: inherit; }
   flex: 0 0 auto;
   min-width: 120px;
 }
+.nav-link-btn {
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  color: white;
+  background: rgba(255,255,255,0.12);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.nav-link-btn:hover { background: rgba(255,255,255,0.22); }
+
+.group-heading { margin-bottom: 12px; }
+.group-heading .auth-title { margin-bottom: 4px; }
+.group-heading .auth-sub { margin-bottom: 0; }
+.group-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--surface-2);
+  border: 0.5px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.group-card:hover { border-color: var(--border-strong); }
+.group-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--blue-bg);
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.group-card-name { font-size: 15px; font-weight: 700; }
+.group-card-desc { font-size: 13px; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
+.member-list { margin-top: 10px; }
+.member-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+.member-row.post-card { padding: 12px 16px; }
+.member-name { font-size: 13px; font-weight: 600; flex: 1; }
+.member-row .btn-secondary { flex: 0 0 auto; min-width: 72px; }
+.admin-tabs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.admin-tabs .section-label { margin-bottom: 0; }
+.admin-tabs .back-link { margin-bottom: 0; }
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -559,7 +619,8 @@ button, input, textarea, select { font-family: inherit; }
 
 @media (max-width: 520px) {
   body { padding: 0.85rem 0.7rem 1.5rem; }
-  .new-post-btn span { display: none; }
+  .new-post-btn span,
+  .nav-link-btn span { display: none; }
   .comment-replies { margin-left: 16px; }
   .anon-options { flex-direction: column; }
 }

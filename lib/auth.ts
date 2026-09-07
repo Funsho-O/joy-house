@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Profile } from "@/lib/types";
+import type { GroupSummary, Profile } from "@/lib/types";
 
 export async function getAuthContext() {
   const supabase = await createClient();
@@ -7,7 +7,7 @@ export async function getAuthContext() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { supabase, user: null, profile: null, isAdmin: false };
+  if (!user) return { supabase, user: null, profile: null, isAdmin: false, groups: [] as GroupSummary[] };
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -15,11 +15,29 @@ export async function getAuthContext() {
     .eq("id", user.id)
     .maybeSingle();
 
+  let groups: GroupSummary[] = [];
+  if (profile) {
+    const { data: memberships, error } = await supabase
+      .from("group_members")
+      .select("groups(id, name)")
+      .eq("user_id", user.id);
+    if (!error && memberships) {
+      groups = memberships
+        .map((row) => {
+          const group = Array.isArray(row.groups) ? row.groups[0] : row.groups;
+          return group ? { id: group.id as string, name: group.name as string } : null;
+        })
+        .filter((group): group is GroupSummary => Boolean(group))
+        .sort((a, b) => a.name.localeCompare(b.name));
+    }
+  }
+
   return {
     supabase,
     user,
     profile: (profile as Profile | null) ?? null,
     isAdmin: profile?.role === "admin",
+    groups,
   };
 }
 

@@ -3,14 +3,22 @@
 import { useMemo, useState } from "react";
 import { IconFlame, IconPin } from "@tabler/icons-react";
 import { CATEGORIES } from "@/lib/types";
-import type { PostCardData, Profile } from "@/lib/types";
+import type { GroupSummary, PostCardData, Profile } from "@/lib/types";
 import { Navbar } from "@/components/Navbar";
 import { Composer } from "@/components/Composer";
 import { PostCard } from "@/components/PostCard";
 
 const FILTERS = ["All", ...CATEGORIES, "Trending"] as const;
 
-export function Feed({ posts, profile }: { posts: PostCardData[]; profile: Profile }) {
+export function Feed({
+  posts,
+  profile,
+  groups = [],
+}: {
+  posts: PostCardData[];
+  profile: Profile;
+  groups?: GroupSummary[];
+}) {
   const [composerOpen, setComposerOpen] = useState(false);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
 
@@ -29,7 +37,7 @@ export function Feed({ posts, profile }: { posts: PostCardData[]; profile: Profi
 
   return (
     <>
-      <Navbar profile={profile} onNewPost={() => setComposerOpen((v) => !v)} />
+      <Navbar profile={profile} groups={groups} onNewPost={() => setComposerOpen((v) => !v)} />
       <Composer open={composerOpen} />
       {pinned.map((post) => (
         <a className="pinned-banner" href={`/posts/${post.id}`} key={post.id}>

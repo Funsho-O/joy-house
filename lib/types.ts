@@ -60,3 +60,38 @@ export type ReportItem = {
   post_title: string | null;
   comment_body: string | null;
 };
+
+export type GroupSummary = {
+  id: string;
+  name: string;
+};
+
+export type Group = {
+  id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  member_count: number;
+};
+
+export type GroupMember = {
+  user_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  added_at: string;
+};
+
+export type GroupPostData = {
+  id: string;
+  group_id: string;
+  title: string;
+  body: string;
+  created_at: string;
+  like_count: number;
+  author_id: string;
+  author_name: string;
+  author_avatar_url: string | null;
+  comment_count: number;
+  liked_by_me: boolean;
+  preview_comments: PreviewComment[];
+};

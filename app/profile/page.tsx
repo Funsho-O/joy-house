@@ -7,12 +7,12 @@ import { removeAvatar, saveAvatarUrl } from "@/app/actions/avatar";
 import { AvatarEditor } from "@/components/AvatarEditor";
 
 export default async function ProfilePage() {
-  const { profile } = await getAuthContext();
+  const { profile, groups } = await getAuthContext();
   if (!profile) redirect("/login");
 
   return (
     <>
-      <Navbar profile={profile} />
+      <Navbar profile={profile} groups={groups} />
       <a className="back-link" href="/">
         <IconArrowLeft size={16} /> Back to feed
       </a>

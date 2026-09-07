@@ -6,18 +6,23 @@ import { Navbar } from "@/components/Navbar";
 import { AdminQueue } from "@/app/admin/AdminQueue";
 
 export default async function AdminPage() {
-  const { profile, isAdmin } = await getAuthContext();
+  const { profile, isAdmin, groups } = await getAuthContext();
   if (!profile) redirect("/login");
   if (!isAdmin) redirect("/");
   const reports = await fetchReports();
 
   return (
     <>
-      <Navbar profile={profile} />
+      <Navbar profile={profile} groups={groups} />
       <a className="back-link" href="/">
         <IconArrowLeft size={16} /> Back to feed
       </a>
-      <div className="section-label">Admin queue</div>
+      <div className="admin-tabs">
+        <span className="section-label">Admin queue</span>
+        <a className="back-link" href="/admin/groups">
+          Manage groups
+        </a>
+      </div>
       <AdminQueue reports={reports} />
     </>
   );

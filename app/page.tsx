@@ -6,8 +6,8 @@ import { Feed } from "@/components/Feed";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const { user, profile, isAdmin } = await getAuthContext();
+  const { user, profile, isAdmin, groups } = await getAuthContext();
   if (!user || !profile) redirect("/login");
   const posts = await fetchFeed(user.id, isAdmin);
-  return <Feed posts={posts} profile={profile} />;
+  return <Feed posts={posts} profile={profile} groups={groups} />;
 }

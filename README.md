@@ -10,6 +10,7 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Feed sorted by newest, category filters, and Trending (most likes in the last 24 hours)
 - Optional profile photos on the Profile page; initials are used if someone skips it
 - Anonymous posts: public name is “Member”; author ID stays in the database for admins
+- Private groups (Youth Leadership and Choir) with their own feeds; admins add members
 - Nested comments, likes (one per member per post), report queue
 - Admins can pin up to 3 posts, delete any post/comment, and review reports
 - Rate limit: 5 posts per member per hour
@@ -27,7 +28,8 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
    - Redirect URLs: `http://localhost:3000/auth/callback` and `https://<your-domain>/auth/callback`.
 4. SQL editor: paste and run `supabase/schema.sql`.
 5. If this project already existed before profile photos, also run `supabase/avatars.sql`.
-6. After you sign up, promote yourself:
+6. If this project already existed before groups, also run `supabase/groups.sql`.
+7. After you sign up, promote yourself:
 
 ```sql
 update public.profiles
@@ -71,12 +73,13 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Security model
 
-Row Level Security is on for `profiles`, `posts`, `comments`, `likes`, and `reports`.
+Row Level Security is on for `profiles`, `posts`, `comments`, `likes`, `reports`, `groups`, `group_members`, `group_posts`, `group_comments`, and `group_likes`.
 
 - Only verified members (confirmed email) can read or write community content.
 - Members can edit/delete only their own posts and comments.
 - `is_admin()` is checked in Postgres before pin, report-queue, and admin delete actions. The Next.js server actions also re-check the profile role.
 - Anonymous `author_id` is redacted in the `posts_visible` view for non-admins.
+- Group content is only readable by people listed in `group_members` for that group. Admins manage membership.
 
 Do not put the Supabase **service role** key in this app. The anon key plus RLS is enough.
 
