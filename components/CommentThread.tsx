@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { IconFlag, IconPencil, IconTrash } from "@tabler/icons-react";
 import { createComment, deleteComment, updateComment } from "@/app/actions/comments";
 import { relativeTime } from "@/lib/format";
@@ -8,6 +8,7 @@ import type { CommentNode, Profile } from "@/lib/types";
 import { ReportModal } from "@/components/ReportModal";
 import { UserAvatar } from "@/components/UserAvatar";
 import { EmojiPickerButton, insertAtCursor, insertIntoValue } from "@/components/EmojiPickerButton";
+import { useEditWindow } from "@/components/EditWindowNote";
 
 function EditedLabel({ at }: { at: string | null }) {
   if (!at) return null;
@@ -46,6 +47,12 @@ function CommentItem({
   const replyRef = useRef<HTMLTextAreaElement>(null);
   const editRef = useRef<HTMLTextAreaElement>(null);
   const canManage = profile.role === "admin" || comment.author_id === profile.id;
+  const editWindow = useEditWindow(comment.created_at, Boolean(canManage && onUpdate));
+  const canEdit = Boolean(onUpdate) && canManage && editWindow.canEdit;
+
+  useEffect(() => {
+    if (editing && !canEdit) setEditing(false);
+  }, [editing, canEdit]);
 
   return (
     <div className="comment-block">
@@ -88,6 +95,7 @@ function CommentItem({
                 <button className="btn-primary" type="submit" disabled={pending}>
                   {pending ? "Saving..." : "Save"}
                 </button>
+                <span className="edit-window-note">You can edit for {editWindow.label}</span>
               </div>
             </form>
           ) : (
@@ -99,6 +107,7 @@ function CommentItem({
           <div className="comment-meta">
             <span>{relativeTime(comment.created_at)}</span>
             <EditedLabel at={comment.edited_at} />
+            {canEdit ? <span className="edit-window-note">You can edit for {editWindow.label}</span> : null}
             {depth < 4 ? (
               <button className="action-btn" type="button" onClick={() => setReplyOpen((v) => !v)}>
                 Reply
@@ -109,7 +118,7 @@ function CommentItem({
                 <IconFlag size={13} /> Report
               </button>
             ) : null}
-            {canManage && onUpdate ? (
+            {canEdit ? (
               <button
                 className="action-btn"
                 type="button"

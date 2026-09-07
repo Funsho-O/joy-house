@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireVerifiedUser } from "@/lib/auth";
 import { assertCleanText } from "@/lib/profanity";
 import { notifyReply } from "@/lib/push";
+import { assertEditable } from "@/lib/edit-window";
 
 export async function createComment(formData: FormData) {
   const { supabase, profile } = await requireVerifiedUser();
@@ -64,6 +65,11 @@ export async function updateComment(formData: FormData) {
   const body = String(formData.get("body") || "").trim();
   if (!id || !body) throw new Error("Write a comment first.");
   assertCleanText(body);
+
+  const { data: existing } = await supabase.from("comments").select("created_at, author_id").eq("id", id).maybeSingle();
+  if (!existing) throw new Error("Comment not found.");
+  if (!isAdmin && existing.author_id !== profile.id) throw new Error("You can only edit your own comment.");
+  assertEditable(existing.created_at);
 
   let query = supabase.from("comments").update({ body }).eq("id", id);
   if (!isAdmin) query = query.eq("author_id", profile.id);

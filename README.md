@@ -14,7 +14,7 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Private groups (Youth Leadership and Choir) with their own feeds; admins add members
 - Nested comments, likes (one per member per post), report queue
 - Emoji picker on post and comment composers
-- Authors and admins can edit posts and comments; edited items show an Edited label
+- Authors and admins can edit posts and comments for 15 minutes; edited items show an Edited label
 - Admins can pin up to 3 posts, delete any post/comment, and review reports
 - Rate limit: 5 posts per member per hour
 - Basic profanity filter on posts, comments, and reports

@@ -5,6 +5,7 @@ import { requireAdmin, requireVerifiedUser } from "@/lib/auth";
 import { CATEGORIES, type Category } from "@/lib/types";
 import { assertCleanText } from "@/lib/profanity";
 import { assertOwnPostImageUrl, postImagePathFromUrl, postImageSetupMessage } from "@/lib/post-image";
+import { assertEditable } from "@/lib/edit-window";
 
 function asCategory(value: string): Category {
   if ((CATEGORIES as readonly string[]).includes(value)) return value as Category;
@@ -49,6 +50,11 @@ export async function updatePost(formData: FormData) {
   const body = String(formData.get("body") || "").trim();
   if (!id || !title) throw new Error("Title is required.");
   assertCleanText(title, body);
+
+  const { data: existing } = await supabase.from("posts").select("created_at, author_id").eq("id", id).maybeSingle();
+  if (!existing) throw new Error("Post not found.");
+  if (!isAdmin && existing.author_id !== profile.id) throw new Error("You can only edit your own post.");
+  assertEditable(existing.created_at);
 
   let query = supabase.from("posts").update({ title, body }).eq("id", id);
   if (!isAdmin) query = query.eq("author_id", profile.id);

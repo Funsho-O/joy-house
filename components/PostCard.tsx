@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import {
   IconHeart,
   IconHeartFilled,
@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { deletePost, toggleLike, togglePin, updatePost } from "@/app/actions/posts";
 import { EmojiPickerButton, insertIntoValue } from "@/components/EmojiPickerButton";
+import { useEditWindow } from "@/components/EditWindowNote";
 import { categoryClass, relativeTime } from "@/lib/format";
 import type { PostCardData, Profile } from "@/lib/types";
 import { ReportModal } from "@/components/ReportModal";
@@ -40,7 +41,14 @@ export function PostCard({
   const lastField = useRef<"title" | "body">("body");
   const isAdmin = profile.role === "admin";
   const isOwner = post.author_id === profile.id;
+  const canManage = isAdmin || isOwner;
+  const editWindow = useEditWindow(post.created_at, canManage);
+  const canEdit = canManage && editWindow.canEdit;
   const publicName = post.is_anonymous && !isAdmin ? "Member" : post.author_name;
+
+  useEffect(() => {
+    if (editing && !canEdit) setEditing(false);
+  }, [editing, canEdit]);
 
   function onLike() {
     const nextLiked = !liked;
@@ -77,6 +85,7 @@ export function PostCard({
                 Edited
               </span>
             ) : null}
+            {canEdit ? <span className="edit-window-note">You can edit for {editWindow.label}</span> : null}
           </div>
         </div>
         {post.is_anonymous ? <span className="anon-badge">Anonymous</span> : null}
@@ -134,6 +143,7 @@ export function PostCard({
             <button className="btn-primary" type="submit">
               Save
             </button>
+            <span className="edit-window-note">You can edit for {editWindow.label}</span>
           </div>
         </form>
       ) : (
@@ -170,7 +180,7 @@ export function PostCard({
             <IconPin size={15} /> {post.is_pinned ? "Unpin" : "Pin"}
           </button>
         ) : null}
-        {isAdmin || isOwner ? (
+        {canEdit ? (
           <button
             className="action-btn"
             type="button"
