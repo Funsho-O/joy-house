@@ -37,7 +37,7 @@ export function Feed({
 
   return (
     <>
-      <Navbar profile={profile} groups={groups} onNewPost={() => setComposerOpen((v) => !v)} />
+      <Navbar profile={profile} groups={groups} active="feed" onNewPost={() => setComposerOpen((v) => !v)} />
       <Composer open={composerOpen} />
       {pinned.map((post) => (
         <a className="pinned-banner" href={`/posts/${post.id}`} key={post.id}>

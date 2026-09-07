@@ -62,6 +62,17 @@ export async function removeGroupMember(groupId: string, userId: string) {
   revalidatePath("/");
 }
 
+export async function deleteGroup(groupId: string) {
+  const { supabase } = await requireAdmin();
+  if (!groupId) throw new Error("Group is required.");
+  const { error } = await supabase.from("groups").delete().eq("id", groupId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/groups");
+  revalidatePath("/admin/groups");
+  revalidatePath(`/admin/groups/${groupId}`);
+  revalidatePath("/");
+}
+
 export async function createGroupPost(formData: FormData) {
   const { supabase, profile } = await requireVerifiedUser();
   const groupId = String(formData.get("group_id") || "");

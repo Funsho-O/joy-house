@@ -78,6 +78,7 @@ export type GroupMember = {
   user_id: string;
   display_name: string;
   avatar_url: string | null;
+  role: UserRole;
   added_at: string;
 };
 

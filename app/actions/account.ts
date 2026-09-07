@@ -49,3 +49,36 @@ export async function updateDisplayName(formData: FormData) {
   revalidatePath("/profile");
 }
 
+export async function setMemberRole(userId: string, role: "member" | "admin") {
+  const { supabase } = await requireAdmin();
+  if (!userId || (role !== "member" && role !== "admin")) {
+    throw new Error("Choose a valid role.");
+  }
+
+  if (role === "member") {
+    const { data: target, error: targetError } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+    if (targetError) throw new Error(targetError.message);
+    if (target?.role === "admin") {
+      const { count, error: countError } = await supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "admin");
+      if (countError) throw new Error(countError.message);
+      if ((count || 0) <= 1) {
+        throw new Error("There must be at least one admin.");
+      }
+    }
+  }
+
+  const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/members");
+  revalidatePath("/profile");
+}
+

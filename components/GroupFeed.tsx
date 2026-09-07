@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { IconArrowLeft } from "@tabler/icons-react";
 import { Navbar } from "@/components/Navbar";
 import { GroupComposer } from "@/components/GroupComposer";
 import { GroupPostCard } from "@/components/GroupPostCard";
@@ -22,7 +23,10 @@ export function GroupFeed({
 
   return (
     <>
-      <Navbar profile={profile} groups={groups} onNewPost={() => setComposerOpen((v) => !v)} />
+      <Navbar profile={profile} groups={groups} active="groups" onNewPost={() => setComposerOpen((v) => !v)} />
+      <a className="back-link" href="/groups">
+        <IconArrowLeft size={16} /> All groups
+      </a>
       <div className="group-heading">
         <div className="section-label">Group</div>
         <h1 className="auth-title">{group.name}</h1>

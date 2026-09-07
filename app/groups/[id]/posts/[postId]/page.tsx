@@ -35,7 +35,7 @@ export default async function GroupPostPage({
 
   return (
     <>
-      <Navbar profile={profile} groups={groups} />
+      <Navbar profile={profile} groups={groups} active="groups" />
       <a className="back-link" href={`/groups/${id}`}>
         <IconArrowLeft size={16} /> Back to {group.name}
       </a>

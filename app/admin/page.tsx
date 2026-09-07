@@ -19,9 +19,14 @@ export default async function AdminPage() {
       </a>
       <div className="admin-tabs">
         <span className="section-label">Admin queue</span>
-        <a className="back-link" href="/admin/groups">
-          Manage groups
-        </a>
+        <div className="admin-tab-links">
+          <a className="back-link" href="/admin/groups">
+            Manage groups
+          </a>
+          <a className="back-link" href="/admin/members">
+            Assign admins
+          </a>
+        </div>
       </div>
       <AdminQueue reports={reports} />
     </>

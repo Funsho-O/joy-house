@@ -4,6 +4,7 @@ import { getAuthContext } from "@/lib/auth";
 import { fetchDirectory, fetchGroup, fetchGroupMembers } from "@/lib/groups";
 import { Navbar } from "@/components/Navbar";
 import { GroupMemberManager } from "@/app/admin/GroupMemberManager";
+import { DeleteGroupButton } from "@/app/admin/DeleteGroupButton";
 
 export default async function AdminGroupPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,6 +24,9 @@ export default async function AdminGroupPage({ params }: { params: Promise<{ id:
       </a>
       <h1 className="auth-title">{group.name}</h1>
       {group.description ? <p className="auth-sub">{group.description}</p> : null}
+      <div className="group-admin-actions">
+        <DeleteGroupButton groupId={id} groupName={group.name} />
+      </div>
       <GroupMemberManager groupId={id} members={members} directory={directory} />
     </>
   );

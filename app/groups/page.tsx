@@ -13,7 +13,7 @@ export default async function GroupsPage() {
 
   return (
     <>
-      <Navbar profile={profile} groups={groups} />
+      <Navbar profile={profile} groups={groups} active="groups" />
       <a className="back-link" href="/">
         <IconArrowLeft size={16} /> Back to feed
       </a>

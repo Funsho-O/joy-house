@@ -78,7 +78,10 @@ export function GroupMemberManager({
         members.map((member) => (
           <div className="member-row post-card" key={member.user_id}>
             <UserAvatar name={member.display_name} src={member.avatar_url} className="comment-av" />
-            <span className="member-name">{member.display_name}</span>
+            <span className="member-name">
+              {member.display_name}
+              {member.role === "admin" ? <span className="post-tag tag-events">Admin</span> : null}
+            </span>
             <button
               className="action-btn danger ml-auto"
               type="button"

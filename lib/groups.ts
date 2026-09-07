@@ -88,7 +88,7 @@ export async function fetchGroupMembers(groupId: string): Promise<GroupMember[]>
 
   const { data: profiles } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url")
+    .select("id, display_name, avatar_url, role")
     .in(
       "id",
       rows.map((row) => row.user_id)
@@ -99,6 +99,7 @@ export async function fetchGroupMembers(groupId: string): Promise<GroupMember[]>
     user_id: row.user_id,
     display_name: profileMap.get(row.user_id)?.display_name || "Member",
     avatar_url: (profileMap.get(row.user_id)?.avatar_url as string | null) || null,
+    role: (profileMap.get(row.user_id)?.role as GroupMember["role"]) || "member",
     added_at: row.added_at,
   }));
 }

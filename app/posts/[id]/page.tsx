@@ -17,7 +17,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
 
   return (
     <>
-      <Navbar profile={profile} groups={groups} />
+      <Navbar profile={profile} groups={groups} active="feed" />
       <a className="back-link" href="/">
         <IconArrowLeft size={16} /> Back to feed
       </a>

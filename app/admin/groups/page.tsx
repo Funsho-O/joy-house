@@ -17,7 +17,12 @@ export default async function AdminGroupsPage() {
       <a className="back-link" href="/admin">
         <IconArrowLeft size={16} /> Back to admin queue
       </a>
-      <div className="section-label">Manage groups</div>
+      <div className="admin-tabs">
+        <span className="section-label">Manage groups</span>
+        <a className="back-link" href="/admin/members">
+          Assign admins
+        </a>
+      </div>
       <CreateGroupForm />
       {allGroups.length === 0 ? (
         <div className="empty-state">No groups yet.</div>
