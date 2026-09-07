@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { IconPhoto, IconUser, IconUserOff, IconX } from "@tabler/icons-react";
+import { EmojiPickerButton, insertAtCursor } from "@/components/EmojiPickerButton";
 import { CATEGORIES, type Category } from "@/lib/types";
 import { createPost } from "@/app/actions/posts";
 import { createClient } from "@/lib/supabase/client";
@@ -20,6 +21,9 @@ export function Composer({ open }: { open: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const lastField = useRef<"title" | "body">("body");
 
   useEffect(() => {
     if (!file) {
@@ -102,13 +106,38 @@ export function Composer({ open }: { open: boolean }) {
         <label className="form-label" htmlFor="postTitle">
           Title
         </label>
-        <input className="form-input" id="postTitle" name="title" type="text" placeholder="What's on your mind?" required />
+        <input
+          className="form-input"
+          id="postTitle"
+          name="title"
+          type="text"
+          placeholder="What's on your mind?"
+          required
+          ref={titleRef}
+          onFocus={() => {
+            lastField.current = "title";
+          }}
+        />
       </div>
       <div className="form-row">
         <label className="form-label" htmlFor="postBody">
           Body (optional)
         </label>
-        <textarea className="form-input form-textarea" id="postBody" name="body" placeholder="Share more details..." />
+        <textarea
+          className="form-input form-textarea"
+          id="postBody"
+          name="body"
+          placeholder="Share more details..."
+          ref={bodyRef}
+          onFocus={() => {
+            lastField.current = "body";
+          }}
+        />
+        <div className="composer-tools">
+          <EmojiPickerButton
+            onSelect={(emoji) => insertAtCursor(lastField.current === "title" ? titleRef.current : bodyRef.current, emoji)}
+          />
+        </div>
       </div>
       <div className="form-row">
         <span className="form-label">Photo (optional)</span>

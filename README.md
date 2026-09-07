@@ -13,6 +13,8 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Anonymous posts: public name is “Member”; author ID stays in the database for admins
 - Private groups (Youth Leadership and Choir) with their own feeds; admins add members
 - Nested comments, likes (one per member per post), report queue
+- Emoji picker on post and comment composers
+- Authors and admins can edit posts and comments; edited items show an Edited label
 - Admins can pin up to 3 posts, delete any post/comment, and review reports
 - Rate limit: 5 posts per member per hour
 - Basic profanity filter on posts, comments, and reports
@@ -33,7 +35,8 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 6. If this project already existed before groups, also run `supabase/groups.sql`.
 7. If this project already existed before post photos, also run `supabase/post-images.sql`.
 8. If this project already existed before Web Push, also run `supabase/push-notifications.sql`.
-9. After you sign up, promote yourself:
+9. If this project already existed before post/comment edits, also run `supabase/edit-posts.sql`.
+10. After you sign up, promote yourself:
 
 ```sql
 update public.profiles

@@ -57,6 +57,22 @@ export async function createComment(formData: FormData) {
   revalidatePath(`/posts/${postId}`);
 }
 
+export async function updateComment(formData: FormData) {
+  const { supabase, profile, isAdmin } = await requireVerifiedUser();
+  const id = String(formData.get("id") || "");
+  const postId = String(formData.get("post_id") || "");
+  const body = String(formData.get("body") || "").trim();
+  if (!id || !body) throw new Error("Write a comment first.");
+  assertCleanText(body);
+
+  let query = supabase.from("comments").update({ body }).eq("id", id);
+  if (!isAdmin) query = query.eq("author_id", profile.id);
+  const { error } = await query;
+  if (error) throw new Error(error.message);
+  revalidatePath("/");
+  if (postId) revalidatePath(`/posts/${postId}`);
+}
+
 export async function deleteComment(commentId: string, postId: string) {
   const { supabase, profile, isAdmin } = await requireVerifiedUser();
   let query = supabase.from("comments").delete().eq("id", commentId);

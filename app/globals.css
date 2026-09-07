@@ -445,6 +445,60 @@ button, input, textarea, select { font-family: inherit; }
 .comment-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; display: flex; gap: 10px; align-items: center; }
 .comment-replies { margin-left: 32px; margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--surface-1); }
 .reply-box { margin-top: 8px; }
+.composer-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.comment-submit {
+  width: auto;
+  margin-top: 0;
+  flex: 1;
+}
+.emoji-wrap { position: relative; }
+.emoji-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius);
+  border: 0.5px solid var(--border-strong);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.emoji-btn:hover,
+.emoji-btn[aria-expanded="true"] {
+  color: var(--blue);
+  border-color: var(--blue-mid);
+  background: var(--blue-bg);
+}
+.emoji-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 40;
+  box-shadow: 0 12px 32px rgba(13, 27, 75, 0.16);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.edited-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: 6px;
+}
+.edit-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.edit-box .composer-tools { margin-top: 0; }
+.edit-box .btn-primary,
+.edit-box .btn-secondary { flex: 0 0 auto; min-width: 72px; }
 
 .banner-error, .banner-ok, .banner-warn {
   border-radius: 12px;

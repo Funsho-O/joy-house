@@ -11,6 +11,7 @@ type VisiblePost = {
   like_count: number;
   is_pinned: boolean;
   image_url: string | null;
+  edited_at: string | null;
   author_id: string | null;
   admin_author_id: string | null;
 };
@@ -22,6 +23,7 @@ type CommentRow = {
   author_id: string;
   parent_id: string | null;
   created_at: string;
+  edited_at: string | null;
 };
 
 function displayName(
@@ -66,7 +68,7 @@ async function hydratePosts(
         : Promise.resolve({ data: [] as Profile[] }),
       supabase
         .from("comments")
-        .select("id, body, post_id, author_id, parent_id, created_at")
+        .select("id, body, post_id, author_id, parent_id, created_at, edited_at")
         .in("post_id", ids)
         .order("created_at", { ascending: true }),
       supabase.from("likes").select("post_id").eq("user_id", userId).in("post_id", ids),
@@ -130,6 +132,7 @@ async function hydratePosts(
       preview_comments: preview,
       likes_last_24h: likes24.get(row.id) || 0,
       image_url: row.image_url || null,
+      edited_at: row.edited_at || null,
     };
   });
 }
@@ -158,7 +161,7 @@ export async function fetchComments(postId: string): Promise<CommentNode[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("comments")
-    .select("id, body, post_id, author_id, parent_id, created_at")
+    .select("id, body, post_id, author_id, parent_id, created_at, edited_at")
     .eq("post_id", postId)
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
@@ -175,6 +178,7 @@ export async function fetchComments(postId: string): Promise<CommentNode[]> {
   rows.forEach((row) => {
     nodes.set(row.id, {
       ...row,
+      edited_at: row.edited_at || null,
       author_name: names.get(row.author_id) || "Member",
       author_avatar_url: avatars.get(row.author_id) || null,
       replies: [],

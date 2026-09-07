@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  transpilePackages: ["emoji-mart", "@emoji-mart/react", "@emoji-mart/data"],
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "*.supabase.co" },

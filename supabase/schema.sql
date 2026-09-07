@@ -37,7 +37,8 @@ create table if not exists public.posts (
   created_at timestamptz not null default now(),
   like_count integer not null default 0,
   is_pinned boolean not null default false,
-  image_url text
+  image_url text,
+  edited_at timestamptz
 );
 
 create table if not exists public.comments (
@@ -46,7 +47,8 @@ create table if not exists public.comments (
   post_id uuid not null references public.posts(id) on delete cascade,
   author_id uuid not null references public.profiles(id) on delete cascade,
   parent_id uuid references public.comments(id) on delete cascade,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  edited_at timestamptz
 );
 
 create table if not exists public.likes (
@@ -213,6 +215,40 @@ create trigger posts_pin_limit
   before insert or update on public.posts
   for each row execute function public.enforce_pin_limit();
 
+create or replace function public.set_post_edited_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.title is distinct from old.title or new.body is distinct from old.body then
+    new.edited_at := now();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists posts_set_edited_at on public.posts;
+create trigger posts_set_edited_at
+  before update on public.posts
+  for each row execute function public.set_post_edited_at();
+
+create or replace function public.set_comment_edited_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.body is distinct from old.body then
+    new.edited_at := now();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists comments_set_edited_at on public.comments;
+create trigger comments_set_edited_at
+  before update on public.comments
+  for each row execute function public.set_comment_edited_at();
+
 -- Redact anonymous authors except for admins and the author
 create or replace view public.posts_visible
 with (security_invoker = true) as
@@ -236,7 +272,8 @@ select
     when public.is_admin() then p.author_id
     else null
   end as admin_author_id,
-  p.image_url
+  p.image_url,
+  p.edited_at
 from public.posts p;
 
 grant select on public.posts_visible to authenticated;
@@ -353,6 +390,13 @@ create policy "authors delete own comments"
   on public.comments for delete
   to authenticated
   using (author_id = auth.uid() and public.is_verified());
+
+drop policy if exists "admins update any comment" on public.comments;
+create policy "admins update any comment"
+  on public.comments for update
+  to authenticated
+  using (public.is_admin())
+  with check (public.is_admin());
 
 drop policy if exists "admins delete any comment" on public.comments;
 create policy "admins delete any comment"

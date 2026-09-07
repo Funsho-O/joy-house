@@ -1,12 +1,22 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { IconFlag, IconTrash } from "@tabler/icons-react";
-import { createComment, deleteComment } from "@/app/actions/comments";
+import { useRef, useState, useTransition } from "react";
+import { IconFlag, IconPencil, IconTrash } from "@tabler/icons-react";
+import { createComment, deleteComment, updateComment } from "@/app/actions/comments";
 import { relativeTime } from "@/lib/format";
 import type { CommentNode, Profile } from "@/lib/types";
 import { ReportModal } from "@/components/ReportModal";
 import { UserAvatar } from "@/components/UserAvatar";
+import { EmojiPickerButton, insertAtCursor, insertIntoValue } from "@/components/EmojiPickerButton";
+
+function EditedLabel({ at }: { at: string | null }) {
+  if (!at) return null;
+  return (
+    <span className="edited-label" title={`Edited ${relativeTime(at)}`}>
+      Edited
+    </span>
+  );
+}
 
 function CommentItem({
   comment,
@@ -14,6 +24,7 @@ function CommentItem({
   profile,
   depth,
   onCreate,
+  onUpdate,
   onDelete,
   allowReport,
 }: {
@@ -22,37 +33,96 @@ function CommentItem({
   profile: Profile;
   depth: number;
   onCreate: (formData: FormData) => Promise<void>;
+  onUpdate?: (formData: FormData) => Promise<void>;
   onDelete: (commentId: string, postId: string) => Promise<void>;
   allowReport: boolean;
 }) {
   const [replyOpen, setReplyOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editBody, setEditBody] = useState(comment.body);
   const [reportOpen, setReportOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const canDelete = profile.role === "admin" || comment.author_id === profile.id;
+  const replyRef = useRef<HTMLTextAreaElement>(null);
+  const editRef = useRef<HTMLTextAreaElement>(null);
+  const canManage = profile.role === "admin" || comment.author_id === profile.id;
 
   return (
     <div className="comment-block">
       <div className="comment">
         <UserAvatar name={comment.author_name} src={comment.author_avatar_url} className="comment-av" />
         <div>
-          <div className="comment-body">
-            <span className="comment-author">{comment.author_name}</span>
-            {comment.body}
-          </div>
+          {editing ? (
+            <form
+              className="edit-box"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!onUpdate) return;
+                const formData = new FormData();
+                formData.set("id", comment.id);
+                formData.set("post_id", postId);
+                formData.set("body", editBody);
+                setError(null);
+                startTransition(async () => {
+                  try {
+                    await onUpdate(formData);
+                    setEditing(false);
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Could not save that comment.");
+                  }
+                });
+              }}
+            >
+              <textarea
+                className="form-input form-textarea"
+                ref={editRef}
+                value={editBody}
+                onChange={(event) => setEditBody(event.target.value)}
+                required
+              />
+              <div className="composer-tools">
+                <EmojiPickerButton onSelect={(emoji) => insertIntoValue(editRef.current, editBody, setEditBody, emoji)} />
+                <button className="btn-secondary" type="button" onClick={() => setEditing(false)}>
+                  Cancel
+                </button>
+                <button className="btn-primary" type="submit" disabled={pending}>
+                  {pending ? "Saving..." : "Save"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="comment-body">
+              <span className="comment-author">{comment.author_name}</span>
+              {comment.body}
+            </div>
+          )}
           <div className="comment-meta">
             <span>{relativeTime(comment.created_at)}</span>
+            <EditedLabel at={comment.edited_at} />
             {depth < 4 ? (
               <button className="action-btn" type="button" onClick={() => setReplyOpen((v) => !v)}>
                 Reply
               </button>
             ) : null}
             {allowReport ? (
-            <button className="action-btn" type="button" onClick={() => setReportOpen(true)}>
-              <IconFlag size={13} /> Report
-            </button>
+              <button className="action-btn" type="button" onClick={() => setReportOpen(true)}>
+                <IconFlag size={13} /> Report
+              </button>
             ) : null}
-            {canDelete ? (
+            {canManage && onUpdate ? (
+              <button
+                className="action-btn"
+                type="button"
+                onClick={() => {
+                  setEditBody(comment.body);
+                  setEditing((value) => !value);
+                  setError(null);
+                }}
+              >
+                <IconPencil size={13} /> Edit
+              </button>
+            ) : null}
+            {canManage ? (
               <button
                 className="action-btn danger"
                 type="button"
@@ -89,10 +159,19 @@ function CommentItem({
                 });
               }}
             >
-              <textarea className="form-input form-textarea" name="body" placeholder="Write a reply..." required />
-              <button className="submit-btn" type="submit" disabled={pending}>
-                Reply
-              </button>
+              <textarea
+                className="form-input form-textarea"
+                name="body"
+                placeholder="Write a reply..."
+                required
+                ref={replyRef}
+              />
+              <div className="composer-tools">
+                <EmojiPickerButton onSelect={(emoji) => insertAtCursor(replyRef.current, emoji)} />
+                <button className="submit-btn comment-submit" type="submit" disabled={pending}>
+                  Reply
+                </button>
+              </div>
             </form>
           ) : null}
         </div>
@@ -107,6 +186,7 @@ function CommentItem({
               profile={profile}
               depth={depth + 1}
               onCreate={onCreate}
+              onUpdate={onUpdate}
               onDelete={onDelete}
               allowReport={allowReport}
             />
@@ -130,18 +210,23 @@ export function CommentThread({
   comments,
   profile,
   onCreate = createComment,
+  onUpdate = updateComment,
   onDelete = deleteComment,
   allowReport = true,
+  allowEdit = true,
 }: {
   postId: string;
   comments: CommentNode[];
   profile: Profile;
   onCreate?: (formData: FormData) => Promise<void>;
+  onUpdate?: (formData: FormData) => Promise<void>;
   onDelete?: (commentId: string, postId: string) => Promise<void>;
   allowReport?: boolean;
+  allowEdit?: boolean;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const commentRef = useRef<HTMLTextAreaElement>(null);
 
   return (
     <section className="comment-thread">
@@ -155,7 +240,7 @@ export function CommentThread({
           startTransition(async () => {
             try {
               await onCreate(formData);
-              (document.getElementById("new-comment") as HTMLTextAreaElement | null)?.form?.reset();
+              commentRef.current?.form?.reset();
             } catch (err) {
               setError(err instanceof Error ? err.message : "Could not comment.");
             }
@@ -171,10 +256,14 @@ export function CommentThread({
           name="body"
           placeholder="Encourage, answer, or pray with them..."
           required
+          ref={commentRef}
         />
-        <button className="submit-btn" type="submit" disabled={pending}>
-          {pending ? "Posting..." : "Comment"}
-        </button>
+        <div className="composer-tools">
+          <EmojiPickerButton onSelect={(emoji) => insertAtCursor(commentRef.current, emoji)} />
+          <button className="submit-btn comment-submit" type="submit" disabled={pending}>
+            {pending ? "Posting..." : "Comment"}
+          </button>
+        </div>
       </form>
       {comments.length === 0 ? (
         <div className="empty-state">No replies yet. Start the conversation.</div>
@@ -187,6 +276,7 @@ export function CommentThread({
             profile={profile}
             depth={0}
             onCreate={onCreate}
+            onUpdate={allowEdit ? onUpdate : undefined}
             onDelete={onDelete}
             allowReport={allowReport}
           />

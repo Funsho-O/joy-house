@@ -1,15 +1,17 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import {
   IconHeart,
   IconHeartFilled,
   IconMessageCircle,
+  IconPencil,
   IconPin,
   IconTrash,
   IconFlag,
 } from "@tabler/icons-react";
-import { deletePost, toggleLike, togglePin } from "@/app/actions/posts";
+import { deletePost, toggleLike, togglePin, updatePost } from "@/app/actions/posts";
+import { EmojiPickerButton, insertIntoValue } from "@/components/EmojiPickerButton";
 import { categoryClass, relativeTime } from "@/lib/format";
 import type { PostCardData, Profile } from "@/lib/types";
 import { ReportModal } from "@/components/ReportModal";
@@ -27,9 +29,15 @@ export function PostCard({
 }) {
   const [liked, setLiked] = useState(post.liked_by_me);
   const [likes, setLikes] = useState(post.like_count);
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(post.title);
+  const [editBody, setEditBody] = useState(post.body);
   const [reportOpen, setReportOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  const titleRef = useRef<HTMLInputElement>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const lastField = useRef<"title" | "body">("body");
   const isAdmin = profile.role === "admin";
   const isOwner = post.author_id === profile.id;
   const publicName = post.is_anonymous && !isAdmin ? "Member" : post.author_name;
@@ -62,14 +70,78 @@ export function PostCard({
             {publicName}
             <span className={`post-tag ${categoryClass(post.category)}`}>{post.category}</span>
           </div>
-          <div className="post-time">{relativeTime(post.created_at)}</div>
+          <div className="post-time">
+            {relativeTime(post.created_at)}
+            {post.edited_at ? (
+              <span className="edited-label" title={`Edited ${relativeTime(post.edited_at)}`}>
+                Edited
+              </span>
+            ) : null}
+          </div>
         </div>
         {post.is_anonymous ? <span className="anon-badge">Anonymous</span> : null}
       </div>
-      <a href={`/posts/${post.id}`}>
-        <h2 className="post-title">{post.title}</h2>
-        {post.body ? <p className="post-body">{post.body}</p> : <div className="post-body" />}
-      </a>
+      {editing ? (
+        <form
+          className="edit-box"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const formData = new FormData();
+            formData.set("id", post.id);
+            formData.set("title", editTitle);
+            formData.set("body", editBody);
+            setError(null);
+            startTransition(async () => {
+              try {
+                await updatePost(formData);
+                setEditing(false);
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Could not save that post.");
+              }
+            });
+          }}
+        >
+          <input
+            className="form-input"
+            ref={titleRef}
+            value={editTitle}
+            onChange={(event) => setEditTitle(event.target.value)}
+            onFocus={() => {
+              lastField.current = "title";
+            }}
+            required
+          />
+          <textarea
+            className="form-input form-textarea"
+            ref={bodyRef}
+            value={editBody}
+            onChange={(event) => setEditBody(event.target.value)}
+            onFocus={() => {
+              lastField.current = "body";
+            }}
+          />
+          <div className="composer-tools">
+            <EmojiPickerButton
+              onSelect={(emoji) =>
+                lastField.current === "title"
+                  ? insertIntoValue(titleRef.current, editTitle, setEditTitle, emoji)
+                  : insertIntoValue(bodyRef.current, editBody, setEditBody, emoji)
+              }
+            />
+            <button className="btn-secondary" type="button" onClick={() => setEditing(false)}>
+              Cancel
+            </button>
+            <button className="btn-primary" type="submit">
+              Save
+            </button>
+          </div>
+        </form>
+      ) : (
+        <a href={`/posts/${post.id}`}>
+          <h2 className="post-title">{post.title}</h2>
+          {post.body ? <p className="post-body">{post.body}</p> : <div className="post-body" />}
+        </a>
+      )}
       {post.image_url ? <PostImage src={post.image_url} alt="" /> : null}
       <div className="post-footer">
         <button className={`action-btn${liked ? " liked" : ""}`} type="button" onClick={onLike}>
@@ -96,6 +168,20 @@ export function PostCard({
             }
           >
             <IconPin size={15} /> {post.is_pinned ? "Unpin" : "Pin"}
+          </button>
+        ) : null}
+        {isAdmin || isOwner ? (
+          <button
+            className="action-btn"
+            type="button"
+            onClick={() => {
+              setEditTitle(post.title);
+              setEditBody(post.body);
+              setEditing((value) => !value);
+              setError(null);
+            }}
+          >
+            <IconPencil size={15} /> Edit
           </button>
         ) : null}
         {isAdmin || isOwner ? (

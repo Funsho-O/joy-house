@@ -36,6 +36,7 @@ export type PostCardData = {
   preview_comments: PreviewComment[];
   likes_last_24h: number;
   image_url: string | null;
+  edited_at: string | null;
 };
 
 export type CommentNode = {
@@ -47,6 +48,7 @@ export type CommentNode = {
   author_avatar_url: string | null;
   parent_id: string | null;
   created_at: string;
+  edited_at: string | null;
   replies: CommentNode[];
 };
 

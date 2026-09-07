@@ -47,6 +47,7 @@ export default async function GroupPostPage({
         onCreate={onCreate}
         onDelete={onDelete}
         allowReport={false}
+        allowEdit={false}
       />
     </>
   );

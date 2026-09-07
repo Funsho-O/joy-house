@@ -227,6 +227,7 @@ export async function fetchGroupComments(postId: string): Promise<CommentNode[]>
       author_avatar_url: avatars.get(row.author_id) || null,
       parent_id: row.parent_id,
       created_at: row.created_at,
+      edited_at: null,
       replies: [],
     });
   });
