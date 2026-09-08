@@ -28,6 +28,26 @@ function asCount(value: unknown) {
   return Number.isFinite(n) ? n : 0;
 }
 
+type AdminActivityRow = {
+  user_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  post_count: unknown;
+  comment_count: unknown;
+  like_count: unknown;
+  last_post_at: string | null;
+  last_active_at: string | null;
+  member_since: string;
+  needs_follow_up: boolean;
+};
+
+type WeeklyEngagementRow = {
+  week_start: string;
+  post_count: unknown;
+  comment_count: unknown;
+  like_count: unknown;
+};
+
 function mapScore(row: {
   user_id: string;
   display_name: string;
@@ -90,7 +110,7 @@ export async function fetchAdminMemberActivity(): Promise<AdminMemberActivity[]>
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_member_activity");
   if (error) throw new Error(activitySetupMessage(error.message));
-  return (data || []).map((row) => ({
+  return ((data || []) as AdminActivityRow[]).map((row: AdminActivityRow) => ({
     user_id: row.user_id,
     display_name: row.display_name,
     avatar_url: row.avatar_url,
@@ -108,7 +128,7 @@ export async function fetchWeeklyEngagement(): Promise<WeeklyEngagement[]> {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("admin_weekly_engagement");
   if (error) throw new Error(activitySetupMessage(error.message));
-  return (data || []).map((row) => ({
+  return ((data || []) as WeeklyEngagementRow[]).map((row: WeeklyEngagementRow) => ({
     week_start: String(row.week_start),
     post_count: asCount(row.post_count),
     comment_count: asCount(row.comment_count),
