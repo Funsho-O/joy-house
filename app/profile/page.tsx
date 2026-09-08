@@ -1,15 +1,19 @@
 import { redirect } from "next/navigation";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { getAuthContext } from "@/lib/auth";
+import { fetchBadgeAwards } from "@/lib/activity";
 import { Navbar } from "@/components/Navbar";
 import { updateDisplayName } from "@/app/actions/account";
 import { removeAvatar, saveAvatarUrl } from "@/app/actions/avatar";
 import { AvatarEditor } from "@/components/AvatarEditor";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { BadgeGrid } from "@/components/BadgeGrid";
 
 export default async function ProfilePage() {
   const { profile, groups } = await getAuthContext();
   if (!profile) redirect("/login");
+
+  const awards = await fetchBadgeAwards(profile.id);
 
   return (
     <>
@@ -41,6 +45,9 @@ export default async function ProfilePage() {
           </button>
         </form>
       </div>
+      <div className="section-label">Your badges</div>
+      <p className="auth-sub">Earned from community posts, comments, and likes. Other members can see these on your profile.</p>
+      <BadgeGrid awards={awards} />
     </>
   );
 }

@@ -4,7 +4,7 @@ import { useTransition, useState } from "react";
 import { deletePost } from "@/app/actions/posts";
 import { deleteComment } from "@/app/actions/comments";
 import { resolveReport } from "@/app/actions/account";
-import { relativeTime } from "@/lib/format";
+import { RelativeTime } from "@/components/RelativeTime";
 import type { ReportItem } from "@/lib/types";
 
 export function AdminQueue({ reports }: { reports: ReportItem[] }) {
@@ -27,7 +27,7 @@ export function AdminQueue({ reports }: { reports: ReportItem[] }) {
                 <span className="post-tag tag-events">Queue</span>
               </div>
               <div className="post-time">
-                {relativeTime(report.created_at)} · flagged by {report.reporter_name}
+                <RelativeTime iso={report.created_at} /> · flagged by {report.reporter_name}
               </div>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { IconArrowLeft, IconUsers } from "@tabler/icons-react";
 import { getAuthContext } from "@/lib/auth";
 import { fetchAllGroups } from "@/lib/groups";
 import { Navbar } from "@/components/Navbar";
+import { AdminNav } from "@/app/admin/AdminNav";
 import { CreateGroupForm } from "@/app/admin/CreateGroupForm";
 
 export default async function AdminGroupsPage() {
@@ -14,15 +15,10 @@ export default async function AdminGroupsPage() {
   return (
     <>
       <Navbar profile={profile} groups={groups} />
-      <a className="back-link" href="/admin">
-        <IconArrowLeft size={16} /> Back to admin queue
+      <a className="back-link" href="/">
+        <IconArrowLeft size={16} /> Back to feed
       </a>
-      <div className="admin-tabs">
-        <span className="section-label">Manage groups</span>
-        <a className="back-link" href="/admin/members">
-          Assign admins
-        </a>
-      </div>
+      <AdminNav active="groups" />
       <CreateGroupForm />
       {allGroups.length === 0 ? (
         <div className="empty-state">No groups yet.</div>

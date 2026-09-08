@@ -6,6 +6,7 @@ import { CATEGORIES, type Category } from "@/lib/types";
 import { assertCleanText } from "@/lib/profanity";
 import { assertOwnPostImageUrl, postImagePathFromUrl, postImageSetupMessage } from "@/lib/post-image";
 import { assertEditable } from "@/lib/edit-window";
+import { revalidateActivity } from "@/lib/activity";
 
 function asCategory(value: string): Category {
   if ((CATEGORIES as readonly string[]).includes(value)) return value as Category;
@@ -41,10 +42,11 @@ export async function createPost(formData: FormData) {
   }
 
   revalidatePath("/");
+  revalidateActivity(profile.id);
 }
 
 export async function updatePost(formData: FormData) {
-  const { supabase, profile, isAdmin } = await requireVerifiedUser();
+  const { supabase, profile } = await requireVerifiedUser();
   const id = String(formData.get("id") || "");
   const title = String(formData.get("title") || "").trim();
   const body = String(formData.get("body") || "").trim();
@@ -53,20 +55,34 @@ export async function updatePost(formData: FormData) {
 
   const { data: existing } = await supabase.from("posts").select("created_at, author_id").eq("id", id).maybeSingle();
   if (!existing) throw new Error("Post not found.");
-  if (!isAdmin && existing.author_id !== profile.id) throw new Error("You can only edit your own post.");
+  if (existing.author_id !== profile.id) throw new Error("You can only edit your own post.");
   assertEditable(existing.created_at);
 
-  let query = supabase.from("posts").update({ title, body }).eq("id", id);
-  if (!isAdmin) query = query.eq("author_id", profile.id);
-  const { error } = await query;
+  const { error } = await supabase.from("posts").update({ title, body }).eq("id", id).eq("author_id", profile.id);
   if (error) throw new Error(error.message);
   revalidatePath("/");
   revalidatePath(`/posts/${id}`);
 }
 
+export async function fetchPostRevisions(postId: string) {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("post_revisions")
+    .select("id, title, body, created_at")
+    .eq("post_id", postId)
+    .order("created_at", { ascending: true });
+  if (error) {
+    if (/schema cache|does not exist/i.test(error.message)) {
+      throw new Error("Edit history is not set up yet. In Supabase, run supabase/edit-history.sql.");
+    }
+    throw new Error(error.message);
+  }
+  return data || [];
+}
+
 export async function deletePost(postId: string) {
   const { supabase, profile, isAdmin } = await requireVerifiedUser();
-  const { data: existing } = await supabase.from("posts").select("image_url").eq("id", postId).maybeSingle();
+  const { data: existing } = await supabase.from("posts").select("image_url, author_id").eq("id", postId).maybeSingle();
   let query = supabase.from("posts").delete().eq("id", postId);
   if (!isAdmin) query = query.eq("author_id", profile.id);
   const { error } = await query;
@@ -75,6 +91,7 @@ export async function deletePost(postId: string) {
   if (path) await supabase.storage.from("post-images").remove([path]);
   revalidatePath("/");
   revalidatePath(`/posts/${postId}`);
+  revalidateActivity(existing?.author_id || profile.id);
 }
 
 export async function togglePin(postId: string, pinned: boolean) {
@@ -93,6 +110,7 @@ export async function togglePin(postId: string, pinned: boolean) {
 
 export async function toggleLike(postId: string, liked: boolean) {
   const { supabase, profile } = await requireVerifiedUser();
+  const { data: post } = await supabase.from("posts").select("author_id").eq("id", postId).maybeSingle();
   if (liked) {
     const { error } = await supabase.from("likes").delete().eq("post_id", postId).eq("user_id", profile.id);
     if (error) throw new Error(error.message);
@@ -102,4 +120,5 @@ export async function toggleLike(postId: string, liked: boolean) {
   }
   revalidatePath("/");
   revalidatePath(`/posts/${postId}`);
+  revalidateActivity(post?.author_id);
 }

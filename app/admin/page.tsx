@@ -3,6 +3,7 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { getAuthContext } from "@/lib/auth";
 import { fetchReports } from "@/lib/data";
 import { Navbar } from "@/components/Navbar";
+import { AdminNav } from "@/app/admin/AdminNav";
 import { AdminQueue } from "@/app/admin/AdminQueue";
 
 export default async function AdminPage() {
@@ -17,17 +18,7 @@ export default async function AdminPage() {
       <a className="back-link" href="/">
         <IconArrowLeft size={16} /> Back to feed
       </a>
-      <div className="admin-tabs">
-        <span className="section-label">Admin queue</span>
-        <div className="admin-tab-links">
-          <a className="back-link" href="/admin/groups">
-            Manage groups
-          </a>
-          <a className="back-link" href="/admin/members">
-            Assign admins
-          </a>
-        </div>
-      </div>
+      <AdminNav active="queue" />
       <AdminQueue reports={reports} />
     </>
   );

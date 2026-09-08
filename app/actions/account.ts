@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireVerifiedUser } from "@/lib/auth";
 import { assertCleanText } from "@/lib/profanity";
+import { revalidateActivity } from "@/lib/activity";
 
 export async function createReport(formData: FormData) {
   const { supabase, profile } = await requireVerifiedUser();
@@ -47,6 +48,7 @@ export async function updateDisplayName(formData: FormData) {
   if (error) throw new Error(error.message);
   revalidatePath("/");
   revalidatePath("/profile");
+  revalidateActivity(profile.id);
 }
 
 export async function setMemberRole(userId: string, role: "member" | "admin") {

@@ -14,8 +14,11 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Private groups (Youth Leadership and Choir) with their own feeds; admins add members
 - Nested comments, likes (one per member per post), report queue
 - Emoji picker on post and comment composers
-- Authors and admins can edit posts and comments for 15 minutes; edited items show an Edited label
-- Admins can pin up to 3 posts, delete any post/comment, and review reports
+- Authors can edit their own posts, group posts, comments, and group comments for 15 minutes; edited items show an Edited label
+- Leaderboard (This Week / All Time): 1 point per named post, comment, and like received on a named post; anonymous posts do not count
+- Profile badges for First Post, Prayer Warrior, Encourager, Trending, Faithful, and Most Loved
+- Admins get an activity dashboard with weekly engagement, quiet-member follow-up flags, and CSV export
+- Admins can pin up to 3 posts, delete any post/comment, unmask anonymous authors, review reports, and open edit history
 - Rate limit: 5 posts per member per hour
 - Basic profanity filter on posts, comments, and reports
 - PWA: Add to Home Screen using the Joy House logo
@@ -36,7 +39,11 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 7. If this project already existed before post photos, also run `supabase/post-images.sql`.
 8. If this project already existed before Web Push, also run `supabase/push-notifications.sql`.
 9. If this project already existed before post/comment edits, also run `supabase/edit-posts.sql`.
-10. After you sign up, promote yourself:
+10. If this project already existed before admin edit history, also run `supabase/edit-history.sql`.
+11. If this project already existed before group post edits, also run `supabase/edit-group-posts.sql`.
+12. If this project already existed before group comment edits, also run `supabase/edit-group-comments.sql`.
+13. If this project already existed before the leaderboard and badges, also run `supabase/activity.sql`.
+14. After you sign up, promote yourself:
 
 ```sql
 update public.profiles
@@ -89,7 +96,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ## Security model
 
-Row Level Security is on for `profiles`, `posts`, `comments`, `likes`, `reports`, `groups`, `group_members`, `group_posts`, `group_comments`, `group_likes`, and `push_subscriptions`.
+Row Level Security is on for `profiles`, `posts`, `comments`, `likes`, `reports`, `groups`, `group_members`, `group_posts`, `group_comments`, `group_likes`, `push_subscriptions`, `post_revisions`, `comment_revisions`, `group_post_revisions`, `group_comment_revisions`, and `badge_awards`.
 
 - Only verified members (confirmed email) can read or write community content.
 - Members can edit/delete only their own posts and comments.

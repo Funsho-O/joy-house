@@ -39,6 +39,19 @@ export type PostCardData = {
   edited_at: string | null;
 };
 
+export type PostRevision = {
+  id: string;
+  title: string;
+  body: string;
+  created_at: string;
+};
+
+export type CommentRevision = {
+  id: string;
+  body: string;
+  created_at: string;
+};
+
 export type CommentNode = {
   id: string;
   body: string;
@@ -99,4 +112,51 @@ export type GroupPostData = {
   comment_count: number;
   liked_by_me: boolean;
   preview_comments: PreviewComment[];
+  edited_at: string | null;
+};
+
+export const BADGE_IDS = [
+  "first_post",
+  "prayer_warrior",
+  "encourager",
+  "trending",
+  "faithful",
+  "most_loved",
+] as const;
+
+export type BadgeId = (typeof BADGE_IDS)[number];
+
+export type LeaderboardEntry = {
+  user_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  post_count: number;
+  comment_count: number;
+  like_count: number;
+  score: number;
+};
+
+export type BadgeAward = {
+  id: BadgeId;
+  earned_at: string | null;
+};
+
+export type AdminMemberActivity = {
+  user_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  post_count: number;
+  comment_count: number;
+  like_count: number;
+  last_post_at: string | null;
+  last_active_at: string | null;
+  member_since: string;
+  needs_follow_up: boolean;
+};
+
+export type WeeklyEngagement = {
+  week_start: string;
+  post_count: number;
+  comment_count: number;
+  like_count: number;
 };

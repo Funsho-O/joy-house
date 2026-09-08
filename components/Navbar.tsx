@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { IconHome, IconPlus, IconUsers } from "@tabler/icons-react";
+import { IconHome, IconPlus, IconTrophy, IconUsers } from "@tabler/icons-react";
 import { signOut } from "@/app/actions/auth";
 import { initials } from "@/lib/format";
 import { Logo } from "@/components/Brand";
@@ -16,7 +16,7 @@ export function Navbar({
   profile: Profile;
   groups?: GroupSummary[];
   onNewPost?: () => void;
-  active?: "feed" | "groups";
+  active?: "feed" | "groups" | "leaderboard";
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -39,6 +39,9 @@ export function Navbar({
       <div className="nav-right" ref={menuRef}>
         <a className={`nav-link-btn${active === "feed" ? " active" : ""}`} href="/">
           <IconHome size={16} /> <span>Feed</span>
+        </a>
+        <a className={`nav-link-btn${active === "leaderboard" ? " active" : ""}`} href="/leaderboard">
+          <IconTrophy size={16} /> <span>Leaderboard</span>
         </a>
         {showGroups ? (
           <a className={`nav-link-btn${active === "groups" ? " active" : ""}`} href="/groups">
@@ -66,9 +69,11 @@ export function Navbar({
         {open ? (
           <div className="user-menu">
             <a href="/">Feed</a>
+            <a href="/leaderboard">Leaderboard</a>
             {showGroups ? <a href="/groups">Groups</a> : null}
             <a href="/profile">Profile</a>
             {profile.role === "admin" ? <a href="/admin">Admin queue</a> : null}
+            {profile.role === "admin" ? <a href="/admin/activity">Activity dashboard</a> : null}
             {profile.role === "admin" ? <a href="/admin/groups">Manage groups</a> : null}
             {profile.role === "admin" ? <a href="/admin/members">Assign admins</a> : null}
             <button

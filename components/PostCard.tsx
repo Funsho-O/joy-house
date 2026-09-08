@@ -13,9 +13,11 @@ import {
 import { deletePost, toggleLike, togglePin, updatePost } from "@/app/actions/posts";
 import { EmojiPickerButton, insertIntoValue } from "@/components/EmojiPickerButton";
 import { useEditWindow } from "@/components/EditWindowNote";
-import { categoryClass, relativeTime } from "@/lib/format";
+import { categoryClass } from "@/lib/format";
 import type { PostCardData, Profile } from "@/lib/types";
 import { ReportModal } from "@/components/ReportModal";
+import { EditHistoryModal } from "@/components/EditHistoryModal";
+import { EditedLabel, RelativeTime } from "@/components/RelativeTime";
 import { UserAvatar } from "@/components/UserAvatar";
 import { PostImage } from "@/components/PostImage";
 
@@ -34,6 +36,7 @@ export function PostCard({
   const [editTitle, setEditTitle] = useState(post.title);
   const [editBody, setEditBody] = useState(post.body);
   const [reportOpen, setReportOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const titleRef = useRef<HTMLInputElement>(null);
@@ -41,9 +44,8 @@ export function PostCard({
   const lastField = useRef<"title" | "body">("body");
   const isAdmin = profile.role === "admin";
   const isOwner = post.author_id === profile.id;
-  const canManage = isAdmin || isOwner;
-  const editWindow = useEditWindow(post.created_at, canManage);
-  const canEdit = canManage && editWindow.canEdit;
+  const editWindow = useEditWindow(post.created_at, isOwner);
+  const canEdit = isOwner && editWindow.canEdit;
   const publicName = post.is_anonymous && !isAdmin ? "Member" : post.author_name;
 
   useEffect(() => {
@@ -75,16 +77,18 @@ export function PostCard({
         />
         <div className="post-meta">
           <div className="post-author">
-            {publicName}
+            {post.author_id ? (
+              <a className="author-link" href={`/members/${post.author_id}`}>
+                {publicName}
+              </a>
+            ) : (
+              publicName
+            )}
             <span className={`post-tag ${categoryClass(post.category)}`}>{post.category}</span>
           </div>
           <div className="post-time">
-            {relativeTime(post.created_at)}
-            {post.edited_at ? (
-              <span className="edited-label" title={`Edited ${relativeTime(post.edited_at)}`}>
-                Edited
-              </span>
-            ) : null}
+            <RelativeTime iso={post.created_at} />
+            <EditedLabel at={post.edited_at} isAdmin={isAdmin} onOpen={() => setHistoryOpen(true)} />
             {editWindow.note ? <span className="edit-window-note">{editWindow.note}</span> : null}
           </div>
         </div>
@@ -236,6 +240,16 @@ export function PostCard({
       ) : null}
       {reportOpen ? (
         <ReportModal targetType="post" postId={post.id} onClose={() => setReportOpen(false)} />
+      ) : null}
+      {historyOpen && post.edited_at ? (
+        <EditHistoryModal
+          kind="post"
+          id={post.id}
+          currentTitle={post.title}
+          currentBody={post.body}
+          editedAt={post.edited_at}
+          onClose={() => setHistoryOpen(false)}
+        />
       ) : null}
     </article>
   );

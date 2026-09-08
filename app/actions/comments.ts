@@ -1,10 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireVerifiedUser } from "@/lib/auth";
+import { requireAdmin, requireVerifiedUser } from "@/lib/auth";
 import { assertCleanText } from "@/lib/profanity";
 import { notifyReply } from "@/lib/push";
 import { assertEditable } from "@/lib/edit-window";
+import { revalidateActivity } from "@/lib/activity";
 
 export async function createComment(formData: FormData) {
   const { supabase, profile } = await requireVerifiedUser();
@@ -56,10 +57,11 @@ export async function createComment(formData: FormData) {
 
   revalidatePath("/");
   revalidatePath(`/posts/${postId}`);
+  revalidateActivity(profile.id);
 }
 
 export async function updateComment(formData: FormData) {
-  const { supabase, profile, isAdmin } = await requireVerifiedUser();
+  const { supabase, profile } = await requireVerifiedUser();
   const id = String(formData.get("id") || "");
   const postId = String(formData.get("post_id") || "");
   const body = String(formData.get("body") || "").trim();
@@ -68,15 +70,29 @@ export async function updateComment(formData: FormData) {
 
   const { data: existing } = await supabase.from("comments").select("created_at, author_id").eq("id", id).maybeSingle();
   if (!existing) throw new Error("Comment not found.");
-  if (!isAdmin && existing.author_id !== profile.id) throw new Error("You can only edit your own comment.");
+  if (existing.author_id !== profile.id) throw new Error("You can only edit your own comment.");
   assertEditable(existing.created_at);
 
-  let query = supabase.from("comments").update({ body }).eq("id", id);
-  if (!isAdmin) query = query.eq("author_id", profile.id);
-  const { error } = await query;
+  const { error } = await supabase.from("comments").update({ body }).eq("id", id).eq("author_id", profile.id);
   if (error) throw new Error(error.message);
   revalidatePath("/");
   if (postId) revalidatePath(`/posts/${postId}`);
+}
+
+export async function fetchCommentRevisions(commentId: string) {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("comment_revisions")
+    .select("id, body, created_at")
+    .eq("comment_id", commentId)
+    .order("created_at", { ascending: true });
+  if (error) {
+    if (/schema cache|does not exist/i.test(error.message)) {
+      throw new Error("Edit history is not set up yet. In Supabase, run supabase/edit-history.sql.");
+    }
+    throw new Error(error.message);
+  }
+  return data || [];
 }
 
 export async function deleteComment(commentId: string, postId: string) {
@@ -88,4 +104,5 @@ export async function deleteComment(commentId: string, postId: string) {
   revalidatePath("/");
   revalidatePath(`/posts/${postId}`);
   revalidatePath("/admin");
+  revalidateActivity();
 }

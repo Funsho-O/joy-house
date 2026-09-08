@@ -71,8 +71,3 @@ create trigger comments_set_edited_at
   for each row execute function public.set_comment_edited_at();
 
 drop policy if exists "admins update any comment" on public.comments;
-create policy "admins update any comment"
-  on public.comments for update
-  to authenticated
-  using (public.is_admin())
-  with check (public.is_admin());

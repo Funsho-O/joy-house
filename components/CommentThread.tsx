@@ -3,21 +3,13 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { IconFlag, IconPencil, IconTrash } from "@tabler/icons-react";
 import { createComment, deleteComment, updateComment } from "@/app/actions/comments";
-import { relativeTime } from "@/lib/format";
 import type { CommentNode, Profile } from "@/lib/types";
 import { ReportModal } from "@/components/ReportModal";
+import { EditHistoryModal } from "@/components/EditHistoryModal";
+import { EditedLabel, RelativeTime } from "@/components/RelativeTime";
 import { UserAvatar } from "@/components/UserAvatar";
 import { EmojiPickerButton, insertAtCursor, insertIntoValue } from "@/components/EmojiPickerButton";
 import { useEditWindow } from "@/components/EditWindowNote";
-
-function EditedLabel({ at }: { at: string | null }) {
-  if (!at) return null;
-  return (
-    <span className="edited-label" title={`Edited ${relativeTime(at)}`}>
-      Edited
-    </span>
-  );
-}
 
 function CommentItem({
   comment,
@@ -28,6 +20,7 @@ function CommentItem({
   onUpdate,
   onDelete,
   allowReport,
+  historyKind,
 }: {
   comment: CommentNode;
   postId: string;
@@ -37,18 +30,22 @@ function CommentItem({
   onUpdate?: (formData: FormData) => Promise<void>;
   onDelete: (commentId: string, postId: string) => Promise<void>;
   allowReport: boolean;
+  historyKind: "comment" | "group-comment";
 }) {
   const [replyOpen, setReplyOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editBody, setEditBody] = useState(comment.body);
   const [reportOpen, setReportOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const replyRef = useRef<HTMLTextAreaElement>(null);
   const editRef = useRef<HTMLTextAreaElement>(null);
-  const canManage = profile.role === "admin" || comment.author_id === profile.id;
-  const editWindow = useEditWindow(comment.created_at, Boolean(canManage && onUpdate));
-  const canEdit = Boolean(onUpdate) && canManage && editWindow.canEdit;
+  const isAdmin = profile.role === "admin";
+  const isOwner = comment.author_id === profile.id;
+  const canManage = isAdmin || isOwner;
+  const editWindow = useEditWindow(comment.created_at, Boolean(isOwner && onUpdate));
+  const canEdit = Boolean(onUpdate) && isOwner && editWindow.canEdit;
 
   useEffect(() => {
     if (editing && !canEdit) setEditing(false);
@@ -100,13 +97,17 @@ function CommentItem({
             </form>
           ) : (
             <div className="comment-body">
-              <span className="comment-author">{comment.author_name}</span>
+              <a className="comment-author author-link" href={`/members/${comment.author_id}`}>
+                {comment.author_name}
+              </a>
               {comment.body}
             </div>
           )}
           <div className="comment-meta">
-            <span>{relativeTime(comment.created_at)}</span>
-            <EditedLabel at={comment.edited_at} />
+            <span>
+              <RelativeTime iso={comment.created_at} />
+            </span>
+            <EditedLabel at={comment.edited_at} isAdmin={isAdmin} onOpen={() => setHistoryOpen(true)} />
             {editWindow.note ? <span className="edit-window-note">{editWindow.note}</span> : null}
             {depth < 4 ? (
               <button className="action-btn" type="button" onClick={() => setReplyOpen((v) => !v)}>
@@ -198,6 +199,7 @@ function CommentItem({
               onUpdate={onUpdate}
               onDelete={onDelete}
               allowReport={allowReport}
+              historyKind={historyKind}
             />
           ))}
         </div>
@@ -208,6 +210,15 @@ function CommentItem({
           postId={postId}
           commentId={comment.id}
           onClose={() => setReportOpen(false)}
+        />
+      ) : null}
+      {historyOpen && comment.edited_at ? (
+        <EditHistoryModal
+          kind={historyKind}
+          id={comment.id}
+          currentBody={comment.body}
+          editedAt={comment.edited_at}
+          onClose={() => setHistoryOpen(false)}
         />
       ) : null}
     </div>
@@ -223,6 +234,7 @@ export function CommentThread({
   onDelete = deleteComment,
   allowReport = true,
   allowEdit = true,
+  historyKind = "comment",
 }: {
   postId: string;
   comments: CommentNode[];
@@ -232,6 +244,7 @@ export function CommentThread({
   onDelete?: (commentId: string, postId: string) => Promise<void>;
   allowReport?: boolean;
   allowEdit?: boolean;
+  historyKind?: "comment" | "group-comment";
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -288,6 +301,7 @@ export function CommentThread({
             onUpdate={allowEdit ? onUpdate : undefined}
             onDelete={onDelete}
             allowReport={allowReport}
+            historyKind={historyKind}
           />
         ))
       )}

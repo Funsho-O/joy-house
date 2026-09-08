@@ -9,6 +9,7 @@ type GroupPostRow = {
   body: string;
   created_at: string;
   like_count: number;
+  edited_at: string | null;
 };
 
 type GroupCommentRow = {
@@ -18,6 +19,7 @@ type GroupCommentRow = {
   author_id: string;
   parent_id: string | null;
   created_at: string;
+  edited_at: string | null;
 };
 
 export async function fetchMyGroups(userId: string): Promise<Group[]> {
@@ -171,6 +173,7 @@ async function hydrateGroupPosts(rows: GroupPostRow[], userId: string): Promise<
       comment_count: postComments.length,
       liked_by_me: liked.has(row.id),
       preview_comments: preview,
+      edited_at: row.edited_at || null,
     };
   });
 }
@@ -179,7 +182,7 @@ export async function fetchGroupFeed(groupId: string, userId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("group_posts")
-    .select("id, group_id, author_id, title, body, created_at, like_count")
+    .select("id, group_id, author_id, title, body, created_at, like_count, edited_at")
     .eq("group_id", groupId)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
@@ -190,7 +193,7 @@ export async function fetchGroupPost(id: string, userId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("group_posts")
-    .select("id, group_id, author_id, title, body, created_at, like_count")
+    .select("id, group_id, author_id, title, body, created_at, like_count, edited_at")
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -203,7 +206,7 @@ export async function fetchGroupComments(postId: string): Promise<CommentNode[]>
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("group_comments")
-    .select("id, body, group_post_id, author_id, parent_id, created_at")
+    .select("id, body, group_post_id, author_id, parent_id, created_at, edited_at")
     .eq("group_post_id", postId)
     .order("created_at", { ascending: true });
   if (error) throw new Error(error.message);
@@ -227,7 +230,7 @@ export async function fetchGroupComments(postId: string): Promise<CommentNode[]>
       author_avatar_url: avatars.get(row.author_id) || null,
       parent_id: row.parent_id,
       created_at: row.created_at,
-      edited_at: null,
+      edited_at: row.edited_at || null,
       replies: [],
     });
   });

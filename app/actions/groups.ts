@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin, requireVerifiedUser } from "@/lib/auth";
 import { assertCleanText } from "@/lib/profanity";
 import { notifyReply } from "@/lib/push";
+import { assertEditable } from "@/lib/edit-window";
 
 function revalidateGroup(groupId: string, postId?: string) {
   revalidatePath("/groups");
@@ -97,6 +98,49 @@ export async function createGroupPost(formData: FormData) {
   revalidateGroup(groupId);
 }
 
+export async function updateGroupPost(formData: FormData) {
+  const { supabase, profile } = await requireVerifiedUser();
+  const id = String(formData.get("id") || "");
+  const groupId = String(formData.get("group_id") || "");
+  const title = String(formData.get("title") || "").trim();
+  const body = String(formData.get("body") || "").trim();
+  if (!id || !title) throw new Error("Title is required.");
+  assertCleanText(title, body);
+
+  const { data: existing } = await supabase
+    .from("group_posts")
+    .select("created_at, author_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!existing) throw new Error("Post not found.");
+  if (existing.author_id !== profile.id) throw new Error("You can only edit your own post.");
+  assertEditable(existing.created_at);
+
+  const { error } = await supabase
+    .from("group_posts")
+    .update({ title, body })
+    .eq("id", id)
+    .eq("author_id", profile.id);
+  if (error) throw new Error(error.message);
+  revalidateGroup(groupId || "", id);
+}
+
+export async function fetchGroupPostRevisions(postId: string) {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("group_post_revisions")
+    .select("id, title, body, created_at")
+    .eq("group_post_id", postId)
+    .order("created_at", { ascending: true });
+  if (error) {
+    if (/schema cache|does not exist/i.test(error.message)) {
+      throw new Error("Edit history is not set up yet. In Supabase, run supabase/edit-group-posts.sql.");
+    }
+    throw new Error(error.message);
+  }
+  return data || [];
+}
+
 export async function deleteGroupPost(postId: string, groupId: string) {
   const { supabase, profile, isAdmin } = await requireVerifiedUser();
   let query = supabase.from("group_posts").delete().eq("id", postId);
@@ -180,6 +224,49 @@ export async function createGroupComment(formData: FormData) {
   }
 
   revalidateGroup(groupId || "", postId);
+}
+
+export async function updateGroupComment(formData: FormData) {
+  const { supabase, profile } = await requireVerifiedUser();
+  const id = String(formData.get("id") || "");
+  const postId = String(formData.get("post_id") || "");
+  const groupId = String(formData.get("group_id") || "");
+  const body = String(formData.get("body") || "").trim();
+  if (!id || !body) throw new Error("Write a comment first.");
+  assertCleanText(body);
+
+  const { data: existing } = await supabase
+    .from("group_comments")
+    .select("created_at, author_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!existing) throw new Error("Comment not found.");
+  if (existing.author_id !== profile.id) throw new Error("You can only edit your own comment.");
+  assertEditable(existing.created_at);
+
+  const { error } = await supabase
+    .from("group_comments")
+    .update({ body })
+    .eq("id", id)
+    .eq("author_id", profile.id);
+  if (error) throw new Error(error.message);
+  revalidateGroup(groupId || "", postId);
+}
+
+export async function fetchGroupCommentRevisions(commentId: string) {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("group_comment_revisions")
+    .select("id, body, created_at")
+    .eq("group_comment_id", commentId)
+    .order("created_at", { ascending: true });
+  if (error) {
+    if (/schema cache|does not exist/i.test(error.message)) {
+      throw new Error("Edit history is not set up yet. In Supabase, run supabase/edit-group-comments.sql.");
+    }
+    throw new Error(error.message);
+  }
+  return data || [];
 }
 
 export async function deleteGroupComment(commentId: string, postId: string, groupId: string) {

@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { getAuthContext } from "@/lib/auth";
 import { fetchGroup, fetchGroupComments, fetchGroupPost } from "@/lib/groups";
-import { createGroupComment, deleteGroupComment } from "@/app/actions/groups";
+import { createGroupComment, deleteGroupComment, updateGroupComment } from "@/app/actions/groups";
 import { Navbar } from "@/components/Navbar";
 import { GroupPostCard } from "@/components/GroupPostCard";
 import { CommentThread } from "@/components/CommentThread";
@@ -28,6 +28,12 @@ export default async function GroupPostPage({
     await createGroupComment(formData);
   }
 
+  async function onUpdate(formData: FormData) {
+    "use server";
+    formData.set("group_id", id);
+    await updateGroupComment(formData);
+  }
+
   async function onDelete(commentId: string, targetPostId: string) {
     "use server";
     await deleteGroupComment(commentId, targetPostId, id);
@@ -45,9 +51,11 @@ export default async function GroupPostPage({
         comments={comments}
         profile={profile}
         onCreate={onCreate}
+        onUpdate={onUpdate}
         onDelete={onDelete}
         allowReport={false}
-        allowEdit={false}
+        allowEdit={true}
+        historyKind="group-comment"
       />
     </>
   );
