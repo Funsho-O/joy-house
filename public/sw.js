@@ -1,4 +1,4 @@
-const CACHE = "joy-house-v2";
+const CACHE = "joy-house-v3";
 const PRECACHE = ["/", "/logo.png", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -27,13 +27,29 @@ self.addEventListener("fetch", (event) => {
   }
 
   const url = new URL(request.url);
-  const isAsset =
+  const isNextAsset = url.pathname.startsWith("/_next/");
+  const isStaticAsset =
     url.pathname.startsWith("/icons/") ||
-    url.pathname.startsWith("/_next/static/") ||
     url.pathname === "/logo.png" ||
     url.pathname === "/manifest.json";
 
-  if (!isAsset) return;
+  if (!isNextAsset && !isStaticAsset) return;
+
+  // Network-first for Next.js bundles so HTML and JS stay in sync after deploys.
+  if (isNextAsset) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || Response.error()))
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(request).then((cached) => {
