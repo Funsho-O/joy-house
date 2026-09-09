@@ -674,6 +674,12 @@ button, input, textarea, select { font-family: inherit; }
   font-weight: 600;
   cursor: pointer;
 }
+.deactivate-zone {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--border);
+}
+.deactivate-zone .btn-danger { width: 100%; }
 
 .back-link {
   display: inline-flex;
@@ -786,6 +792,7 @@ button, input, textarea, select { font-family: inherit; }
   align-items: center;
   gap: 10px;
   padding: 8px 0;
+  flex-wrap: wrap;
 }
 .member-row.post-card { padding: 12px 16px; }
 .member-name {
@@ -798,6 +805,18 @@ button, input, textarea, select { font-family: inherit; }
   flex-wrap: wrap;
 }
 .member-row .btn-secondary { flex: 0 0 auto; min-width: 72px; }
+.member-row .deactivate-zone {
+  flex: 1 0 100%;
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 0.5px solid var(--border);
+}
+.member-row .deactivate-zone .btn-danger {
+  width: auto;
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  font-size: 12px;
+}
 .admin-tabs {
   display: flex;
   align-items: center;

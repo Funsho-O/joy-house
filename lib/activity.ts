@@ -95,16 +95,35 @@ export async function fetchMemberProfile(userId: string): Promise<Profile | null
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url, role, push_enabled")
+    .select("id, display_name, avatar_url, role, push_enabled, deactivated_at")
     .eq("id", userId)
     .maybeSingle();
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (/deactivated_at|schema cache/i.test(error.message)) {
+      const retry = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, role, push_enabled")
+        .eq("id", userId)
+        .maybeSingle();
+      if (retry.error) throw new Error(retry.error.message);
+      if (!retry.data) return null;
+      return {
+        ...retry.data,
+        push_enabled: retry.data.push_enabled ?? true,
+        date_of_birth: null,
+        celebrate_birthday: false,
+        deactivated_at: null,
+      } as Profile;
+    }
+    throw new Error(error.message);
+  }
   if (!data) return null;
   return {
     ...data,
     push_enabled: data.push_enabled ?? true,
     date_of_birth: null,
     celebrate_birthday: false,
+    deactivated_at: data.deactivated_at || null,
   } as Profile;
 }
 

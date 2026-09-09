@@ -108,12 +108,29 @@ export async function fetchGroupMembers(groupId: string): Promise<GroupMember[]>
 
 export async function fetchDirectory(): Promise<Profile[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const query = supabase
     .from("profiles")
     .select("id, display_name, avatar_url, role")
+    .is("deactivated_at", null)
     .order("display_name");
-  if (error) throw new Error(error.message);
-  return (data || []) as Profile[];
+  const { data, error } = await query;
+  if (error) {
+    if (/deactivated_at|schema cache/i.test(error.message)) {
+      const retry = await supabase.from("profiles").select("id, display_name, avatar_url, role").order("display_name");
+      if (retry.error) throw new Error(retry.error.message);
+      return (retry.data || []).map((row) => ({ ...row, push_enabled: true, date_of_birth: null, celebrate_birthday: false, deactivated_at: null })) as Profile[];
+    }
+    throw new Error(error.message);
+  }
+  return ((data || []) as Omit<Profile, "push_enabled" | "date_of_birth" | "celebrate_birthday" | "deactivated_at">[]).map(
+    (row) => ({
+      ...row,
+      push_enabled: true,
+      date_of_birth: null,
+      celebrate_birthday: false,
+      deactivated_at: null,
+    })
+  );
 }
 
 async function hydrateGroupPosts(rows: GroupPostRow[], userId: string): Promise<GroupPostData[]> {

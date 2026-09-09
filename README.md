@@ -19,7 +19,8 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Profile badges for First Post, Prayer Warrior, Encourager, Trending, Faithful, and Most Loved
 - Admins get an activity dashboard with weekly engagement, quiet-member follow-up flags, and CSV export
 - Optional birthdays (month and day; year is optional): public feed celebrations, or a private admin-only notice. System birthday posts do not count on the leaderboard
-- Admins can pin up to 3 posts, delete any post/comment, unmask anonymous authors, review reports, and open edit history
+- Admins can pin up to 3 posts, delete any post/comment, unmask anonymous authors, review reports, open edit history, and deactivate accounts
+- Deactivating an account (from Profile, Admin members, or the Supabase Auth dashboard) keeps posts and comments, and shows the author as Former Member
 - Rate limit: 5 posts per member per hour
 - Basic profanity filter on posts, comments, and reports
 - PWA: Add to Home Screen using the Joy House logo
@@ -45,7 +46,8 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 12. If this project already existed before group comment edits, also run `supabase/edit-group-comments.sql`.
 13. If this project already existed before the leaderboard and badges, also run `supabase/activity.sql`.
 14. If this project already existed before birthday celebrations, also run `supabase/birthdays.sql`.
-15. After you sign up, promote yourself:
+15. If this project already existed before account deactivation, also run `supabase/soft-delete-accounts.sql`.
+16. After you sign up, promote yourself:
 
 ```sql
 update public.profiles
@@ -108,6 +110,7 @@ Row Level Security is on for `profiles`, `posts`, `comments`, `likes`, `reports`
 - `is_admin()` is checked in Postgres before pin, report-queue, and admin delete actions. The Next.js server actions also re-check the profile role.
 - Anonymous `author_id` is redacted in the `posts_visible` view for non-admins.
 - Group content is only readable by people listed in `group_members` for that group. Admins manage membership.
+- Deleting a login (Auth dashboard, Profile, or Admin members) deactivates the profile. Posts and comments stay, attributed to Former Member. Profile rows cannot be hard-deleted.
 
 Do not put the Supabase **service role** key in this app. The anon key plus RLS is enough.
 

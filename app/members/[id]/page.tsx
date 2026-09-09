@@ -13,7 +13,7 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
 
   const member = await fetchMemberProfile(id);
   if (!member) notFound();
-  const awards = await fetchBadgeAwards(id);
+  const awards = member.deactivated_at ? [] : await fetchBadgeAwards(id);
   const isSelf = member.id === profile.id;
 
   return (
@@ -26,7 +26,13 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
         <UserAvatar name={member.display_name} src={member.avatar_url} />
         <div>
           <h1 className="auth-title">{member.display_name}</h1>
-          <p className="auth-sub">{member.role === "admin" ? "Admin" : "Member"}</p>
+          <p className="auth-sub">
+            {member.deactivated_at
+              ? "This account is no longer active."
+              : member.role === "admin"
+                ? "Admin"
+                : "Member"}
+          </p>
           {isSelf ? (
             <a className="back-link" href="/profile">
               Edit profile
@@ -34,8 +40,12 @@ export default async function MemberProfilePage({ params }: { params: Promise<{ 
           ) : null}
         </div>
       </div>
-      <div className="section-label">Badges</div>
-      <BadgeGrid awards={awards} />
+      {member.deactivated_at ? null : (
+        <>
+          <div className="section-label">Badges</div>
+          <BadgeGrid awards={awards} />
+        </>
+      )}
     </>
   );
 }

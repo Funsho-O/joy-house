@@ -8,6 +8,7 @@ import { removeAvatar, saveAvatarUrl } from "@/app/actions/avatar";
 import { AvatarEditor } from "@/components/AvatarEditor";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { BadgeGrid } from "@/components/BadgeGrid";
+import { DeactivateAccountButton } from "@/components/DeactivateAccountButton";
 import { BIRTHDAY_MONTHS, formatSavedBirthday, splitStoredBirthday } from "@/lib/birthday";
 
 export default async function ProfilePage({
@@ -131,6 +132,7 @@ export default async function ProfilePage({
             Save
           </button>
         </form>
+        <DeactivateAccountButton userId={profile.id} name={profile.display_name} isSelf />
       </div>
       <div className="section-label">Your badges</div>
       <p className="auth-sub">Earned from community posts, comments, and likes. Other members can see these on your profile.</p>

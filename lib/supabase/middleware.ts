@@ -1,7 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/signup", "/verify-email", "/auth/callback"];
+const PUBLIC_PATHS = ["/login", "/signup", "/verify-email", "/auth/callback", "/auth/deactivated"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -35,6 +35,23 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const verified = Boolean(user?.email_confirmed_at);
+
+  if (user) {
+    const { data: ownProfile } = await supabase
+      .from("profiles")
+      .select("deactivated_at")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (ownProfile?.deactivated_at) {
+      if (pathname !== "/auth/deactivated") {
+        const url = request.nextUrl.clone();
+        url.pathname = "/auth/deactivated";
+        url.search = "";
+        return NextResponse.redirect(url);
+      }
+      return supabaseResponse;
+    }
+  }
 
   if (!user && !isPublic(pathname)) {
     const url = request.nextUrl.clone();

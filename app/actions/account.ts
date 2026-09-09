@@ -84,20 +84,47 @@ export async function setMemberRole(userId: string, role: "member" | "admin") {
   if (role === "member") {
     const { data: target, error: targetError } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, deactivated_at")
       .eq("id", userId)
       .maybeSingle();
-    if (targetError) throw new Error(targetError.message);
-    if (target?.role === "admin") {
-      const { count, error: countError } = await supabase
-        .from("profiles")
-        .select("id", { count: "exact", head: true })
-        .eq("role", "admin");
-      if (countError) throw new Error(countError.message);
-      if ((count || 0) <= 1) {
-        throw new Error("There must be at least one admin.");
+    if (targetError) {
+      if (/deactivated_at|schema cache/i.test(targetError.message)) {
+        const retry = await supabase.from("profiles").select("role").eq("id", userId).maybeSingle();
+        if (retry.error) throw new Error(retry.error.message);
+        if (retry.data?.role === "admin") {
+          const { count, error: countError } = await supabase
+            .from("profiles")
+            .select("id", { count: "exact", head: true })
+            .eq("role", "admin");
+          if (countError) throw new Error(countError.message);
+          if ((count || 0) <= 1) throw new Error("There must be at least one admin.");
+        }
+      } else {
+        throw new Error(targetError.message);
+      }
+    } else {
+      if (target?.deactivated_at) throw new Error("That account is deactivated.");
+      if (target?.role === "admin") {
+        const { count, error: countError } = await supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .eq("role", "admin")
+          .is("deactivated_at", null);
+        if (countError) throw new Error(countError.message);
+        if ((count || 0) <= 1) {
+          throw new Error("There must be at least one admin.");
+        }
       }
     }
+  }
+
+  if (role === "admin") {
+    const { data: target } = await supabase
+      .from("profiles")
+      .select("deactivated_at")
+      .eq("id", userId)
+      .maybeSingle();
+    if (target?.deactivated_at) throw new Error("That account is deactivated.");
   }
 
   const { error } = await supabase.from("profiles").update({ role }).eq("id", userId);
@@ -128,4 +155,32 @@ export async function runBirthdayCelebrations() {
   revalidatePath("/admin");
   return data;
 }
+
+export async function deactivateAccount(userId: string) {
+  const { supabase, profile, isAdmin } = await requireVerifiedUser();
+  if (!userId) throw new Error("Choose a member.");
+  if (userId !== profile.id && !isAdmin) {
+    throw new Error("Not allowed.");
+  }
+
+  const { error } = await supabase.rpc("deactivate_account", { target_id: userId });
+  if (error) {
+    if (/function .* does not exist/i.test(error.message) || /schema cache/i.test(error.message)) {
+      throw new Error("Account deactivation is not set up yet. In Supabase, run supabase/soft-delete-accounts.sql.");
+    }
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/");
+  revalidatePath("/profile");
+  revalidatePath("/admin");
+  revalidatePath("/admin/members");
+  revalidateActivity(userId);
+
+  if (userId === profile.id) {
+    await supabase.auth.signOut();
+    redirect("/login?deactivated=1");
+  }
+}
+
 

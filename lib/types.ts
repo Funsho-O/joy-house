@@ -11,6 +11,7 @@ export type Profile = {
   push_enabled: boolean;
   date_of_birth: string | null;
   celebrate_birthday: boolean;
+  deactivated_at: string | null;
 };
 
 export type PreviewComment = {

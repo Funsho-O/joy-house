@@ -3,6 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { setMemberRole } from "@/app/actions/account";
 import { UserAvatar } from "@/components/UserAvatar";
+import { DeactivateAccountButton } from "@/components/DeactivateAccountButton";
 import type { Profile } from "@/lib/types";
 
 export function AdminRoleManager({ people }: { people: Profile[] }) {
@@ -66,6 +67,7 @@ export function AdminRoleManager({ people }: { people: Profile[] }) {
                 Make admin
               </button>
             )}
+            <DeactivateAccountButton userId={person.id} name={person.display_name} />
           </div>
         ))
       )}

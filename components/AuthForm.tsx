@@ -15,7 +15,7 @@ function GoogleIcon() {
   );
 }
 
-export function AuthForm({ mode }: { mode: "login" | "signup" }) {
+export function AuthForm({ mode, notice }: { mode: "login" | "signup"; notice?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -72,6 +72,7 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       <p className="auth-sub">
         Private community for House of Joy Youth · RCCG Pretoria. Only verified members can post or comment.
       </p>
+      {notice ? <div className="banner-warn">{notice}</div> : null}
       {error ? <div className="banner-error">{error}</div> : null}
       {info ? <div className="banner-ok">{info}</div> : null}
       <form onSubmit={onSubmit}>
