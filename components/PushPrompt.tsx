@@ -3,8 +3,12 @@
 import { useEffect, useState } from "react";
 import { IconBell } from "@tabler/icons-react";
 import { createClient } from "@/lib/supabase/client";
-import { savePushSubscription } from "@/app/actions/push";
 import { PUSH_PROMPT_KEY, pushSupported, subscribeToPush, vapidPublicKey } from "@/lib/push-client";
+
+async function persistPushSubscription() {
+  const { savePushSubscription } = await import("@/app/actions/push");
+  await savePushSubscription(await subscribeToPush());
+}
 
 const AUTH_PATHS = ["/login", "/signup", "/verify-email"];
 
@@ -29,7 +33,7 @@ export function PushPrompt() {
 
       if (Notification.permission === "granted" && enabled) {
         try {
-          await savePushSubscription(await subscribeToPush());
+          await persistPushSubscription();
         } catch {
           // Missing SQL or a stale VAPID key should not block the app.
         }
@@ -56,7 +60,7 @@ export function PushPrompt() {
     localStorage.setItem(PUSH_PROMPT_KEY, "1");
     setVisible(false);
     try {
-      await savePushSubscription(await subscribeToPush());
+      await persistPushSubscription();
     } catch {
       // Browser denial is enough feedback; they can retry from Profile.
     }

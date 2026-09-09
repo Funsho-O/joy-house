@@ -160,6 +160,11 @@ button, input, textarea, select { font-family: inherit; }
   outline: none;
 }
 .form-input:focus { border-color: var(--blue); }
+.birthday-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) 76px minmax(0, 1fr);
+  gap: 6px;
+}
 .form-textarea { resize: none; height: 70px; }
 .form-textarea.tall { height: 110px; }
 
@@ -560,6 +565,7 @@ button, input, textarea, select { font-family: inherit; }
 }
 .banner-error { background: var(--danger-bg); color: var(--danger); }
 .banner-ok { background: #E0F4E8; color: #0A5A28; }
+.birthday-saved { margin: 8px 0 0; }
 .banner-warn { background: var(--orange-light); color: #7A4000; }
 
 .empty-state {
@@ -1062,6 +1068,8 @@ button, input, textarea, select { font-family: inherit; }
   .nav-link-btn span { display: none; }
   .comment-replies { margin-left: 16px; }
   .anon-options { flex-direction: column; }
+  .birthday-fields { grid-template-columns: minmax(0, 1fr) 76px; }
+  .birthday-fields #birth_year { grid-column: 1 / -1; }
   .activity-summary { grid-template-columns: 1fr 1fr; }
   .badge-grid { grid-template-columns: 1fr; }
   .leaderboard-score span { display: none; }

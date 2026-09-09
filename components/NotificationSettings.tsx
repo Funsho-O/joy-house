@@ -9,11 +9,12 @@ export function NotificationSettings({ profile }: { profile: Profile }) {
   const [enabled, setEnabled] = useState(profile.push_enabled !== false);
   const [subscribed, setSubscribed] = useState(false);
   const [permission, setPermission] = useState<NotificationPermission>("default");
+  const [available, setAvailable] = useState(() => Boolean(vapidPublicKey()));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
-  const available = pushSupported() && Boolean(vapidPublicKey());
 
   useEffect(() => {
+    setAvailable(pushSupported() && Boolean(vapidPublicKey()));
     if (!pushSupported()) return;
     setPermission(Notification.permission);
     navigator.serviceWorker.ready

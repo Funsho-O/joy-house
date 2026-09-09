@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireAdmin, requireVerifiedUser } from "@/lib/auth";
 import { assertCleanText } from "@/lib/profanity";
 import { revalidateActivity } from "@/lib/activity";
+import { buildDateOfBirth } from "@/lib/birthday";
 
 export async function createReport(formData: FormData) {
   const { supabase, profile } = await requireVerifiedUser();
@@ -42,17 +44,11 @@ export async function updateProfile(formData: FormData) {
   if (!displayName) throw new Error("Display name is required.");
   assertCleanText(displayName);
 
-  const dobRaw = String(formData.get("date_of_birth") || "").trim();
-  let dateOfBirth: string | null = null;
-  if (dobRaw) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dobRaw)) throw new Error("Enter a valid date of birth.");
-    const dob = new Date(`${dobRaw}T12:00:00`);
-    if (Number.isNaN(dob.getTime())) throw new Error("Enter a valid date of birth.");
-    const today = new Date();
-    if (dob > today) throw new Error("Date of birth cannot be in the future.");
-    if (today.getFullYear() - dob.getFullYear() > 120) throw new Error("Enter a valid date of birth.");
-    dateOfBirth = dobRaw;
-  }
+  const dateOfBirth = buildDateOfBirth(
+    String(formData.get("birth_month") || ""),
+    String(formData.get("birth_day") || ""),
+    String(formData.get("birth_year") || "")
+  );
 
   const celebrate = String(formData.get("celebrate_birthday") || "") === "true";
   const { error } = await supabase
@@ -72,6 +68,7 @@ export async function updateProfile(formData: FormData) {
   revalidatePath("/");
   revalidatePath("/profile");
   revalidateActivity(profile.id);
+  redirect("/profile?saved=1");
 }
 
 export async function updateDisplayName(formData: FormData) {

@@ -8,12 +8,20 @@ import { removeAvatar, saveAvatarUrl } from "@/app/actions/avatar";
 import { AvatarEditor } from "@/components/AvatarEditor";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { BadgeGrid } from "@/components/BadgeGrid";
+import { BIRTHDAY_MONTHS, formatSavedBirthday, splitStoredBirthday } from "@/lib/birthday";
 
-export default async function ProfilePage() {
+export default async function ProfilePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ saved?: string }>;
+}) {
   const { profile, groups } = await getAuthContext();
   if (!profile) redirect("/login");
 
+  const query = await searchParams;
   const awards = await fetchBadgeAwards(profile.id);
+  const birthday = splitStoredBirthday(profile.date_of_birth);
+  const savedBirthday = formatSavedBirthday(profile.date_of_birth);
 
   return (
     <>
@@ -27,6 +35,7 @@ export default async function ProfilePage() {
         <AvatarEditor profile={profile} saveAvatarUrl={saveAvatarUrl} removeAvatar={removeAvatar} />
         <NotificationSettings profile={profile} />
         <form action={updateProfile}>
+          {query.saved ? <div className="banner-ok">Profile saved.</div> : null}
           <div className="form-row">
             <label className="form-label" htmlFor="display_name">
               Display name
@@ -40,17 +49,56 @@ export default async function ProfilePage() {
             />
           </div>
           <div className="form-row">
-            <label className="form-label" htmlFor="date_of_birth">
-              Date of birth
-            </label>
-            <input
-              className="form-input"
-              id="date_of_birth"
-              name="date_of_birth"
-              type="date"
-              defaultValue={(profile.date_of_birth || "").slice(0, 10)}
-            />
-            <p className="anon-hint">Optional. Used only for birthday celebrations.</p>
+            <p className="form-label" id="birthday-label">
+              Birthday
+            </p>
+            <div
+              className="birthday-fields"
+              role="group"
+              aria-labelledby="birthday-label"
+              key={profile.date_of_birth || "birthday-empty"}
+            >
+              <label className="sr-only" htmlFor="birth_month">
+                Month
+              </label>
+              <select className="form-input" id="birth_month" name="birth_month" defaultValue={birthday.month}>
+                <option value="">Month</option>
+                {BIRTHDAY_MONTHS.map((month) => (
+                  <option key={month.value} value={String(month.value)}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+              <label className="sr-only" htmlFor="birth_day">
+                Day
+              </label>
+              <select className="form-input" id="birth_day" name="birth_day" defaultValue={birthday.day}>
+                <option value="">Day</option>
+                {Array.from({ length: 31 }, (_, index) => index + 1).map((day) => (
+                  <option key={day} value={String(day)}>
+                    {day}
+                  </option>
+                ))}
+              </select>
+              <label className="sr-only" htmlFor="birth_year">
+                Year (optional)
+              </label>
+              <input
+                className="form-input"
+                id="birth_year"
+                name="birth_year"
+                inputMode="numeric"
+                maxLength={4}
+                placeholder="Year (optional)"
+                defaultValue={birthday.year}
+                autoComplete="off"
+              />
+            </div>
+            {savedBirthday ? (
+              <p className="banner-ok birthday-saved">Saved: {savedBirthday}</p>
+            ) : (
+              <p className="anon-hint">Optional. Month and day are enough. Year is not required.</p>
+            )}
           </div>
           <div className="form-row">
             <p className="form-label">Birthday privacy</p>

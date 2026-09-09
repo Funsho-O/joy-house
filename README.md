@@ -18,7 +18,7 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Leaderboard (This Week / All Time): 1 point per named post, comment, and like received on a named post; anonymous posts do not count
 - Profile badges for First Post, Prayer Warrior, Encourager, Trending, Faithful, and Most Loved
 - Admins get an activity dashboard with weekly engagement, quiet-member follow-up flags, and CSV export
-- Optional birthdays: public feed celebrations, or a private admin-only notice. System birthday posts do not count on the leaderboard
+- Optional birthdays (month and day; year is optional): public feed celebrations, or a private admin-only notice. System birthday posts do not count on the leaderboard
 - Admins can pin up to 3 posts, delete any post/comment, unmask anonymous authors, review reports, and open edit history
 - Rate limit: 5 posts per member per hour
 - Basic profanity filter on posts, comments, and reports
