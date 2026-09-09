@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Category, CommentNode, PostCardData, PreviewComment, Profile, ReportItem } from "@/lib/types";
+import type { BirthdayAlert, Category, CommentNode, PostCardData, PreviewComment, Profile, ReportItem } from "@/lib/types";
 
 type VisiblePost = {
   id: string;
@@ -14,6 +14,7 @@ type VisiblePost = {
   edited_at: string | null;
   author_id: string | null;
   admin_author_id: string | null;
+  is_birthday?: boolean;
 };
 
 type CommentRow = {
@@ -133,6 +134,7 @@ async function hydratePosts(
       likes_last_24h: likes24.get(row.id) || 0,
       image_url: row.image_url || null,
       edited_at: row.edited_at || null,
+      is_birthday: Boolean(row.is_birthday),
     };
   });
 }
@@ -239,4 +241,36 @@ export async function fetchReports(): Promise<ReportItem[]> {
       comment_body: comment?.body || null,
     };
   });
+}
+
+export async function fetchBirthdayAlerts(): Promise<BirthdayAlert[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("birthday_alerts")
+    .select("id, profile_id, year, created_at")
+    .order("created_at", { ascending: false });
+  if (error) {
+    if (/schema cache|does not exist/i.test(error.message)) return [];
+    throw new Error(error.message);
+  }
+  const rows = data || [];
+  if (rows.length === 0) return [];
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, display_name, avatar_url")
+    .in(
+      "id",
+      rows.map((row) => row.profile_id)
+    );
+  const names = new Map((profiles || []).map((p) => [p.id, p]));
+
+  return rows.map((row) => ({
+    id: row.id,
+    profile_id: row.profile_id,
+    display_name: names.get(row.profile_id)?.display_name || "Member",
+    avatar_url: (names.get(row.profile_id)?.avatar_url as string | null) || null,
+    year: Number(row.year),
+    created_at: row.created_at,
+  }));
 }

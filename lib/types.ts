@@ -9,6 +9,8 @@ export type Profile = {
   avatar_url: string | null;
   role: UserRole;
   push_enabled: boolean;
+  date_of_birth: string | null;
+  celebrate_birthday: boolean;
 };
 
 export type PreviewComment = {
@@ -37,6 +39,7 @@ export type PostCardData = {
   likes_last_24h: number;
   image_url: string | null;
   edited_at: string | null;
+  is_birthday: boolean;
 };
 
 export type PostRevision = {
@@ -159,4 +162,13 @@ export type WeeklyEngagement = {
   post_count: number;
   comment_count: number;
   like_count: number;
+};
+
+export type BirthdayAlert = {
+  id: string;
+  profile_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  year: number;
+  created_at: string;
 };

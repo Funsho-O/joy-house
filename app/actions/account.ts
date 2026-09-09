@@ -36,19 +36,46 @@ export async function resolveReport(reportId: string) {
   revalidatePath("/admin");
 }
 
-export async function updateDisplayName(formData: FormData) {
+export async function updateProfile(formData: FormData) {
   const { supabase, profile } = await requireVerifiedUser();
   const displayName = String(formData.get("display_name") || "").trim();
   if (!displayName) throw new Error("Display name is required.");
   assertCleanText(displayName);
+
+  const dobRaw = String(formData.get("date_of_birth") || "").trim();
+  let dateOfBirth: string | null = null;
+  if (dobRaw) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dobRaw)) throw new Error("Enter a valid date of birth.");
+    const dob = new Date(`${dobRaw}T12:00:00`);
+    if (Number.isNaN(dob.getTime())) throw new Error("Enter a valid date of birth.");
+    const today = new Date();
+    if (dob > today) throw new Error("Date of birth cannot be in the future.");
+    if (today.getFullYear() - dob.getFullYear() > 120) throw new Error("Enter a valid date of birth.");
+    dateOfBirth = dobRaw;
+  }
+
+  const celebrate = String(formData.get("celebrate_birthday") || "") === "true";
   const { error } = await supabase
     .from("profiles")
-    .update({ display_name: displayName })
+    .update({
+      display_name: displayName,
+      date_of_birth: dateOfBirth,
+      celebrate_birthday: celebrate,
+    })
     .eq("id", profile.id);
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (/date_of_birth|celebrate_birthday|schema cache/i.test(error.message)) {
+      throw new Error("Birthday settings are not set up yet. In Supabase, run supabase/birthdays.sql.");
+    }
+    throw new Error(error.message);
+  }
   revalidatePath("/");
   revalidatePath("/profile");
   revalidateActivity(profile.id);
+}
+
+export async function updateDisplayName(formData: FormData) {
+  return updateProfile(formData);
 }
 
 export async function setMemberRole(userId: string, role: "member" | "admin") {
@@ -82,5 +109,26 @@ export async function setMemberRole(userId: string, role: "member" | "admin") {
   revalidatePath("/admin");
   revalidatePath("/admin/members");
   revalidatePath("/profile");
+}
+
+export async function dismissBirthdayAlert(alertId: string) {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from("birthday_alerts").delete().eq("id", alertId);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin");
+}
+
+export async function runBirthdayCelebrations() {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase.rpc("run_birthday_celebrations");
+  if (error) {
+    if (/schema cache|does not exist/i.test(error.message)) {
+      throw new Error("Birthday celebrations are not set up yet. In Supabase, run supabase/birthdays.sql.");
+    }
+    throw new Error(error.message);
+  }
+  revalidatePath("/");
+  revalidatePath("/admin");
+  return data;
 }
 

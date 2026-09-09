@@ -1,6 +1,26 @@
 import { createClient } from "@/lib/supabase/server";
 import type { GroupSummary, Profile } from "@/lib/types";
 
+function withProfileDefaults(row: {
+  id: string;
+  display_name: string;
+  avatar_url?: string | null;
+  role: Profile["role"];
+  push_enabled?: boolean | null;
+  date_of_birth?: string | null;
+  celebrate_birthday?: boolean | null;
+}): Profile {
+  return {
+    id: row.id,
+    display_name: row.display_name,
+    avatar_url: row.avatar_url || null,
+    role: row.role,
+    push_enabled: row.push_enabled ?? true,
+    date_of_birth: row.date_of_birth || null,
+    celebrate_birthday: Boolean(row.celebrate_birthday),
+  };
+}
+
 export async function getAuthContext() {
   const supabase = await createClient();
   const {
@@ -9,21 +29,31 @@ export async function getAuthContext() {
 
   if (!user) return { supabase, user: null, profile: null, isAdmin: false, groups: [] as GroupSummary[] };
 
-  let { data: profile, error: profileError } = await supabase
+  let profile: Profile | null = null;
+  const full = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url, role, push_enabled")
+    .select("id, display_name, avatar_url, role, push_enabled, date_of_birth, celebrate_birthday")
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profileError) {
+  if (!full.error && full.data) {
+    profile = withProfileDefaults(full.data);
+  } else {
     const retry = await supabase
       .from("profiles")
-      .select("id, display_name, avatar_url, role")
+      .select("id, display_name, avatar_url, role, push_enabled")
       .eq("id", user.id)
       .maybeSingle();
-    profile = retry.data ? { ...retry.data, push_enabled: true } : null;
-  } else if (profile && profile.push_enabled == null) {
-    profile = { ...profile, push_enabled: true };
+    if (!retry.error && retry.data) {
+      profile = withProfileDefaults(retry.data);
+    } else {
+      const basic = await supabase
+        .from("profiles")
+        .select("id, display_name, avatar_url, role")
+        .eq("id", user.id)
+        .maybeSingle();
+      profile = basic.data ? withProfileDefaults(basic.data) : null;
+    }
   }
 
   let groups: GroupSummary[] = [];
@@ -46,7 +76,7 @@ export async function getAuthContext() {
   return {
     supabase,
     user,
-    profile: (profile as Profile | null) ?? null,
+    profile,
     isAdmin: profile?.role === "admin",
     groups,
   };

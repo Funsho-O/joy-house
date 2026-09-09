@@ -18,6 +18,7 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Leaderboard (This Week / All Time): 1 point per named post, comment, and like received on a named post; anonymous posts do not count
 - Profile badges for First Post, Prayer Warrior, Encourager, Trending, Faithful, and Most Loved
 - Admins get an activity dashboard with weekly engagement, quiet-member follow-up flags, and CSV export
+- Optional birthdays: public feed celebrations, or a private admin-only notice. System birthday posts do not count on the leaderboard
 - Admins can pin up to 3 posts, delete any post/comment, unmask anonymous authors, review reports, and open edit history
 - Rate limit: 5 posts per member per hour
 - Basic profanity filter on posts, comments, and reports
@@ -43,7 +44,8 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 11. If this project already existed before group post edits, also run `supabase/edit-group-posts.sql`.
 12. If this project already existed before group comment edits, also run `supabase/edit-group-comments.sql`.
 13. If this project already existed before the leaderboard and badges, also run `supabase/activity.sql`.
-14. After you sign up, promote yourself:
+14. If this project already existed before birthday celebrations, also run `supabase/birthdays.sql`.
+15. After you sign up, promote yourself:
 
 ```sql
 update public.profiles
@@ -69,6 +71,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_VAPID_PUBLIC_KEY=
 VAPID_PRIVATE_KEY=
 VAPID_SUBJECT=mailto:you@example.com
+CRON_SECRET=
 ```
 
 Generate VAPID keys once and reuse the same pair in every environment (changing them invalidates existing subscriptions):
@@ -90,13 +93,15 @@ Open [http://localhost:3000](http://localhost:3000).
 
 1. Push this folder to a Git repository.
 2. Import the repo in Vercel. Framework preset: Next.js.
-3. Add the same environment variables, including the VAPID keys. Set `NEXT_PUBLIC_SITE_URL` to `https://<your-domain>`.
+3. Add the same environment variables, including the VAPID keys and `CRON_SECRET`. Set `NEXT_PUBLIC_SITE_URL` to `https://<your-domain>`.
 4. In Supabase, add the production Site URL and `/auth/callback` redirect.
 5. Point the Cloudflare domain to Vercel (CNAME to `cname.vercel-dns.com`, or Cloudflare for SaaS). HTTPS is automatic on Vercel.
 
+Birthday posts are created once a day at 06:00 Pretoria time (`0 4 * * *` UTC) by Vercel Cron (`/api/cron/birthdays`) and, if your Supabase project allows it, `pg_cron`. Admins can also press **Check today** on the Admin queue. System birthday posts do not count on the leaderboard.
+
 ## Security model
 
-Row Level Security is on for `profiles`, `posts`, `comments`, `likes`, `reports`, `groups`, `group_members`, `group_posts`, `group_comments`, `group_likes`, `push_subscriptions`, `post_revisions`, `comment_revisions`, `group_post_revisions`, `group_comment_revisions`, and `badge_awards`.
+Row Level Security is on for `profiles`, `posts`, `comments`, `likes`, `reports`, `groups`, `group_members`, `group_posts`, `group_comments`, `group_likes`, `push_subscriptions`, `post_revisions`, `comment_revisions`, `group_post_revisions`, `group_comment_revisions`, `badge_awards`, and `birthday_alerts`.
 
 - Only verified members (confirmed email) can read or write community content.
 - Members can edit/delete only their own posts and comments.

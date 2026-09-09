@@ -8,6 +8,7 @@ import {
   IconPencil,
   IconPin,
   IconTrash,
+  IconCake,
   IconFlag,
 } from "@tabler/icons-react";
 import { deletePost, toggleLike, togglePin, updatePost } from "@/app/actions/posts";
@@ -42,10 +43,12 @@ export function PostCard({
   const titleRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const lastField = useRef<"title" | "body">("body");
+  const isBirthday = Boolean(post.is_birthday);
   const isAdmin = profile.role === "admin";
   const isOwner = post.author_id === profile.id;
-  const editWindow = useEditWindow(post.created_at, isOwner);
-  const canEdit = isOwner && editWindow.canEdit;
+  const editWindow = useEditWindow(post.created_at, isOwner && !isBirthday);
+  const canEdit = isOwner && editWindow.canEdit && !isBirthday;
+  const canDelete = isAdmin || (isOwner && !isBirthday);
   const publicName = post.is_anonymous && !isAdmin ? "Member" : post.author_name;
 
   useEffect(() => {
@@ -67,13 +70,14 @@ export function PostCard({
   }
 
   return (
-    <article className="post-card">
+    <article className={`post-card${isBirthday ? " birthday-card" : ""}`}>
       {error ? <div className="banner-error">{error}</div> : null}
       <div className="post-header">
         <UserAvatar
           name={publicName}
           src={post.author_avatar_url}
           anonymous={post.is_anonymous && !isAdmin}
+          className={isBirthday ? "post-avatar birthday-avatar" : "post-avatar"}
         />
         <div className="post-meta">
           <div className="post-author">
@@ -84,14 +88,23 @@ export function PostCard({
             ) : (
               publicName
             )}
-            <span className={`post-tag ${categoryClass(post.category)}`}>{post.category}</span>
+            {isBirthday ? (
+              <span className="post-tag tag-events">Birthday</span>
+            ) : (
+              <span className={`post-tag ${categoryClass(post.category)}`}>{post.category}</span>
+            )}
           </div>
           <div className="post-time">
-            <RelativeTime iso={post.created_at} />
+            {isBirthday ? "Celebrating today" : <RelativeTime iso={post.created_at} />}
             <EditedLabel at={post.edited_at} isAdmin={isAdmin} onOpen={() => setHistoryOpen(true)} />
             {editWindow.note ? <span className="edit-window-note">{editWindow.note}</span> : null}
           </div>
         </div>
+        {isBirthday ? (
+          <span className="birthday-badge">
+            <IconCake size={14} /> Birthday
+          </span>
+        ) : null}
         {post.is_anonymous ? <span className="anon-badge">Anonymous</span> : null}
       </div>
       {editing ? (
@@ -198,7 +211,7 @@ export function PostCard({
             <IconPencil size={15} /> Edit
           </button>
         ) : null}
-        {isAdmin || isOwner ? (
+        {canDelete ? (
           <button
             className="action-btn danger ml-auto"
             type="button"

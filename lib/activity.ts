@@ -103,6 +103,8 @@ export async function fetchMemberProfile(userId: string): Promise<Profile | null
   return {
     ...data,
     push_enabled: data.push_enabled ?? true,
+    date_of_birth: null,
+    celebrate_birthday: false,
   } as Profile;
 }
 

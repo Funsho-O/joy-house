@@ -194,12 +194,19 @@ button, input, textarea, select { font-family: inherit; }
   background: var(--surface-1);
   color: var(--text-secondary);
   cursor: pointer;
+  position: relative;
 }
-.anon-option:hover:not(.selected) { background: var(--surface-2); color: var(--text-primary); }
-.anon-option.selected {
+.anon-option:hover:not(.selected):not(:has(input:checked)) { background: var(--surface-2); color: var(--text-primary); }
+.anon-option.selected,
+.anon-option:has(input:checked) {
   background: var(--blue-bg);
   border-color: var(--blue-mid);
   color: var(--blue);
+}
+.anon-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
 }
 .anon-hint {
   font-size: 12px;
@@ -1025,6 +1032,29 @@ button, input, textarea, select { font-family: inherit; }
   gap: 6px;
   padding: 8px 12px;
 }
+
+.birthday-card {
+  background: linear-gradient(180deg, #FFF8E8 0%, var(--surface-2) 48px);
+  border-color: #F5C16C;
+}
+.birthday-avatar {
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
+}
+.birthday-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: var(--orange-light);
+  color: #7A4000;
+  flex-shrink: 0;
+}
+.birthday-admin { margin-bottom: 18px; }
 
 @media (max-width: 520px) {
   body { padding: 0.85rem 0.7rem 1.5rem; }
