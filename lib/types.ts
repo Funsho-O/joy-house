@@ -173,3 +173,15 @@ export type BirthdayAlert = {
   year: number;
   created_at: string;
 };
+
+export type NotificationKind = "post_reply" | "comment_reply" | "post_like";
+
+export type AppNotification = {
+  id: string;
+  kind: NotificationKind;
+  post_id: string;
+  post_title: string;
+  actor_name: string;
+  actor_avatar_url: string | null;
+  created_at: string;
+};

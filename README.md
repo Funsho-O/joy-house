@@ -25,6 +25,7 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Basic profanity filter on posts, comments, and reports
 - PWA: Add to Home Screen using the Joy House logo
 - Web Push on Android: notify members when someone replies to their post or comment
+- In-app notification bell: unread replies and likes, with a red count badge on the navbar
 
 ## 1. Create a Supabase project
 
@@ -47,7 +48,8 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 13. If this project already existed before the leaderboard and badges, also run `supabase/activity.sql`.
 14. If this project already existed before birthday celebrations, also run `supabase/birthdays.sql`.
 15. If this project already existed before account deactivation, also run `supabase/soft-delete-accounts.sql`.
-16. After you sign up, promote yourself:
+16. If this project already existed before in-app notifications, also run `supabase/notifications.sql`.
+17. After you sign up, promote yourself:
 
 ```sql
 update public.profiles
@@ -103,13 +105,14 @@ Birthday posts are created once a day at 06:00 Pretoria time (`0 4 * * *` UTC) b
 
 ## Security model
 
-Row Level Security is on for `profiles`, `posts`, `comments`, `likes`, `reports`, `groups`, `group_members`, `group_posts`, `group_comments`, `group_likes`, `push_subscriptions`, `post_revisions`, `comment_revisions`, `group_post_revisions`, `group_comment_revisions`, `badge_awards`, and `birthday_alerts`.
+Row Level Security is on for `profiles`, `posts`, `comments`, `likes`, `reports`, `groups`, `group_members`, `group_posts`, `group_comments`, `group_likes`, `push_subscriptions`, `post_revisions`, `comment_revisions`, `group_post_revisions`, `group_comment_revisions`, `badge_awards`, `birthday_alerts`, and `notifications`.
 
 - Only verified members (confirmed email) can read or write community content.
 - Members can edit/delete only their own posts and comments.
 - `is_admin()` is checked in Postgres before pin, report-queue, and admin delete actions. The Next.js server actions also re-check the profile role.
 - Anonymous `author_id` is redacted in the `posts_visible` view for non-admins.
 - Group content is only readable by people listed in `group_members` for that group. Admins manage membership.
+- Members can only read and mark their own in-app notifications. Rows are created by database triggers, not by the client.
 - Deleting a login (Auth dashboard, Profile, or Admin members) deactivates the profile. Posts and comments stay, attributed to Former Member. Profile rows cannot be hard-deleted.
 
 Do not put the Supabase **service role** key in this app. The anon key plus RLS is enough.

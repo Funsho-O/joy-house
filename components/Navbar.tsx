@@ -5,6 +5,7 @@ import { IconHome, IconPlus, IconTrophy, IconUsers } from "@tabler/icons-react";
 import { signOut } from "@/app/actions/auth";
 import { initials } from "@/lib/format";
 import { Logo } from "@/components/Brand";
+import { NotificationBell } from "@/components/NotificationBell";
 import type { GroupSummary, Profile } from "@/lib/types";
 
 export function Navbar({
@@ -36,7 +37,7 @@ export function Navbar({
   return (
     <div className="topbar">
       <Logo />
-      <div className="nav-right" ref={menuRef}>
+      <div className="nav-right">
         <a className={`nav-link-btn${active === "feed" ? " active" : ""}`} href="/">
           <IconHome size={16} /> <span>Feed</span>
         </a>
@@ -53,6 +54,8 @@ export function Navbar({
             <IconPlus size={16} /> <span>New post</span>
           </button>
         ) : null}
+        <NotificationBell />
+        <div className="nav-account" ref={menuRef}>
         <button
           className={`avatar${profile.avatar_url ? " has-photo" : ""}`}
           type="button"
@@ -86,6 +89,7 @@ export function Navbar({
             </button>
           </div>
         ) : null}
+        </div>
       </div>
     </div>
   );

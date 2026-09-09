@@ -5,9 +5,15 @@ import { UserAvatar } from "@/components/UserAvatar";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
 
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+const AVATAR_TOO_LARGE = "That photo is too large. Please choose an image under 2MB.";
+
 function storageMessage(message: string) {
   if (/bucket not found/i.test(message)) {
     return "Photo storage is not set up yet. In Supabase, open the SQL editor and run supabase/avatars.sql.";
+  }
+  if (/maximum allowed size|payload too large|file size/i.test(message)) {
+    return AVATAR_TOO_LARGE;
   }
   return message;
 }
@@ -34,12 +40,16 @@ export function AvatarEditor({
 
   function onPick(file: File | undefined) {
     if (!file) return;
+    if (inputRef.current) inputRef.current.value = "";
+    if (file.size > MAX_AVATAR_BYTES) {
+      setError(AVATAR_TOO_LARGE);
+      return;
+    }
     setError(null);
     startTransition(async () => {
       try {
         const ext = AVATAR_TYPES[file.type];
         if (!ext) throw new Error("Use a JPG, PNG, WebP, or GIF.");
-        if (file.size > 2 * 1024 * 1024) throw new Error("Photo must be under 2MB.");
 
         const supabase = createClient();
         const { data: existing } = await supabase.storage.from("avatars").list(profile.id);
@@ -62,8 +72,6 @@ export function AvatarEditor({
         await saveAvatarUrl(`${data.publicUrl}?t=${Date.now()}`);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not save that photo.");
-      } finally {
-        if (inputRef.current) inputRef.current.value = "";
       }
     });
   }
@@ -74,7 +82,6 @@ export function AvatarEditor({
       <p className="auth-sub avatar-hint">
         Optional. Shown on your posts and comments. Hidden when you post anonymously.
       </p>
-      {error ? <div className="banner-error">{error}</div> : null}
       <div className="avatar-editor">
         <UserAvatar name={profile.display_name} src={profile.avatar_url} className="profile-avatar" />
         <div className="avatar-editor-actions">
@@ -114,6 +121,7 @@ export function AvatarEditor({
           ) : null}
         </div>
       </div>
+      {error ? <div className="banner-error">{error}</div> : null}
     </div>
   );
 }
