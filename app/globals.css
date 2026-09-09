@@ -1,14 +1,14 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --surface-0: #F2F4F8;
-  --surface-1: #E8EBF2;
+  --surface-0: #F6EFE4;
+  --surface-1: #EDE3D2;
   --surface-2: #ffffff;
-  --text-primary: #0D1B4B;
-  --text-secondary: #3A4A7A;
-  --text-muted: #8090BB;
-  --border: rgba(0,0,0,0.08);
-  --border-strong: rgba(0,0,0,0.15);
+  --text-primary: #1A1840;
+  --text-secondary: #5C4E42;
+  --text-muted: #8C7B68;
+  --border: rgba(92, 58, 20, 0.10);
+  --border-strong: rgba(92, 58, 20, 0.18);
   --radius: 8px;
   --blue: #0155CF;
   --blue-light: #4A90E2;
@@ -26,7 +26,10 @@ html, body { min-height: 100%; }
 
 body {
   font-family: var(--font-sans);
-  background: var(--surface-0);
+  background-color: var(--surface-0);
+  background-image:
+    radial-gradient(ellipse 120% 55% at 50% -15%, rgba(254, 153, 1, 0.18), transparent 58%),
+    radial-gradient(ellipse 70% 40% at 100% 110%, rgba(255, 215, 0, 0.12), transparent 55%);
   color: var(--text-primary);
   min-height: 100vh;
   padding: 1.5rem 1rem;
@@ -116,7 +119,7 @@ button, input, textarea, select { font-family: inherit; }
   border-radius: 12px;
   min-width: 180px;
   padding: 6px;
-  box-shadow: 0 8px 24px rgba(13, 27, 75, 0.12);
+  box-shadow: 0 8px 24px rgba(80, 40, 10, 0.12);
   z-index: 20;
 }
 .user-menu button, .user-menu a {
@@ -492,7 +495,7 @@ button, input, textarea, select { font-family: inherit; }
   top: calc(100% + 6px);
   left: 0;
   z-index: 40;
-  box-shadow: 0 12px 32px rgba(13, 27, 75, 0.16);
+  box-shadow: 0 12px 32px rgba(80, 40, 10, 0.16);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -830,7 +833,7 @@ button, input, textarea, select { font-family: inherit; }
   border-radius: 12px;
   padding: 12px 14px;
   margin-top: 1rem;
-  box-shadow: 0 8px 24px rgba(13, 27, 75, 0.12);
+  box-shadow: 0 8px 24px rgba(80, 40, 10, 0.12);
 }
 .push-banner-copy {
   display: flex;
