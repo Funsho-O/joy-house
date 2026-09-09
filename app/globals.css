@@ -1160,8 +1160,132 @@ button, input, textarea, select { font-family: inherit; }
 }
 
 .birthday-card {
+  position: relative;
   background: linear-gradient(180deg, #FFF8E8 0%, var(--surface-2) 48px);
   border-color: #F5C16C;
+}
+.birthday-balloons {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.balloon {
+  position: absolute;
+  bottom: -36px;
+  width: 16px;
+  height: 20px;
+  border-radius: 50%;
+  opacity: 0.85;
+  animation: balloon-float 9s ease-in infinite;
+}
+.balloon::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 7px;
+  height: 5px;
+  transform: translateX(-50%);
+  background: inherit;
+  clip-path: polygon(50% 0, 0 100%, 100% 100%);
+}
+.balloon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 1px;
+  height: 16px;
+  background: rgba(26, 26, 40, 0.28);
+}
+.balloon.b1 { left: 8%; background: #FFD700; animation-duration: 8.2s; animation-delay: 0s; }
+.balloon.b2 { left: 28%; background: #FE9901; width: 14px; height: 18px; animation-duration: 9.4s; animation-delay: 1.4s; }
+.balloon.b3 { left: 52%; background: #FC111F; animation-duration: 7.6s; animation-delay: 0.7s; }
+.balloon.b4 { left: 72%; background: #9E0190; width: 13px; height: 16px; animation-duration: 10s; animation-delay: 2.2s; }
+.balloon.b5 { left: 88%; background: #0155CF; animation-duration: 8.8s; animation-delay: 3.1s; }
+@keyframes balloon-float {
+  0% { transform: translateY(0) translateX(0) rotate(-6deg); opacity: 0; }
+  8% { opacity: 0.9; }
+  50% { transform: translateY(-70px) translateX(8px) rotate(8deg); }
+  100% { transform: translateY(-150px) translateX(-6px) rotate(-4deg); opacity: 0; }
+}
+.birthday-hooray {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.hooray-word {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  transform: translate(-50%, 10px) scale(0.4);
+  opacity: 0;
+  font-size: 22px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -0.4px;
+  color: #FE9901;
+  text-shadow: 0 1px 0 #fff4d4, 0 6px 16px rgba(254, 153, 1, 0.35);
+}
+.birthday-hooray.burst .hooray-word {
+  animation: hooray-word 1.15s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+.confetti {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: 8px;
+  height: 11px;
+  border-radius: 1px;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.4);
+}
+.birthday-hooray.burst .confetti {
+  animation: confetti-burst 1.15s ease-out both;
+}
+.confetti.c1 { background: #FFD700; --dx: -72px; --dy: -58px; --rot: -120deg; animation-delay: 0.02s; }
+.confetti.c2 { background: #FE9901; --dx: -28px; --dy: -78px; --rot: 80deg; width: 6px; height: 9px; }
+.confetti.c3 { background: #FC111F; --dx: 18px; --dy: -82px; --rot: -40deg; animation-delay: 0.04s; }
+.confetti.c4 { background: #9E0190; --dx: 64px; --dy: -62px; --rot: 130deg; width: 7px; }
+.confetti.c5 { background: #0155CF; --dx: 86px; --dy: -28px; --rot: -90deg; animation-delay: 0.06s; }
+.confetti.c6 { background: #4A90E2; --dx: 78px; --dy: 18px; --rot: 50deg; height: 8px; }
+.confetti.c7 { background: #FFD700; --dx: 42px; --dy: 48px; --rot: -160deg; animation-delay: 0.08s; border-radius: 50%; width: 7px; height: 7px; }
+.confetti.c8 { background: #FE9901; --dx: -8px; --dy: 56px; --rot: 20deg; }
+.confetti.c9 { background: #FC111F; --dx: -58px; --dy: 36px; --rot: -70deg; animation-delay: 0.05s; width: 6px; }
+.confetti.c10 { background: #9E0190; --dx: -88px; --dy: 4px; --rot: 110deg; }
+.confetti.c11 { background: #0155CF; --dx: -84px; --dy: -36px; --rot: -20deg; animation-delay: 0.1s; border-radius: 50%; width: 8px; height: 8px; }
+.confetti.c12 { background: #FFD700; --dx: 6px; --dy: -54px; --rot: 95deg; height: 7px; }
+.confetti.c13 { background: #FE9901; --dx: 52px; --dy: -18px; --rot: -140deg; animation-delay: 0.07s; }
+.confetti.c14 { background: #FC111F; --dx: -40px; --dy: -18px; --rot: 60deg; width: 5px; height: 13px; }
+.confetti.c15 { background: #4A90E2; --dx: 30px; --dy: 28px; --rot: -55deg; animation-delay: 0.03s; }
+.confetti.c16 { background: #9E0190; --dx: -22px; --dy: 22px; --rot: 170deg; border-radius: 50%; width: 6px; height: 6px; }
+.confetti.c17 { background: #FFD700; --dx: 70px; --dy: -48px; --rot: -8deg; width: 10px; height: 6px; }
+.confetti.c18 { background: #FE9901; --dx: -66px; --dy: -70px; --rot: 45deg; animation-delay: 0.09s; }
+@keyframes hooray-word {
+  0% { opacity: 0; transform: translate(-50%, 14px) scale(0.35) rotate(-8deg); }
+  35% { opacity: 1; transform: translate(-50%, -6px) scale(1.18) rotate(3deg); }
+  70% { opacity: 1; transform: translate(-50%, -10px) scale(1) rotate(-2deg); }
+  100% { opacity: 0; transform: translate(-50%, -18px) scale(0.92) rotate(0deg); }
+}
+@keyframes confetti-burst {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.3) rotate(0deg); }
+  18% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1) rotate(var(--rot)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .balloon,
+  .hooray-word,
+  .confetti {
+    animation: none;
+  }
+  .balloon,
+  .birthday-hooray { display: none; }
 }
 .birthday-avatar {
   width: 48px;

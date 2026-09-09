@@ -43,6 +43,8 @@ export function PostCard({
   const titleRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const lastField = useRef<"title" | "body">("body");
+  const cardRef = useRef<HTMLElement>(null);
+  const [hooray, setHooray] = useState(false);
   const isBirthday = Boolean(post.is_birthday);
   const isAdmin = profile.role === "admin";
   const isOwner = post.author_id === profile.id;
@@ -50,6 +52,44 @@ export function PostCard({
   const canEdit = isOwner && editWindow.canEdit && !isBirthday;
   const canDelete = isAdmin || (isOwner && !isBirthday);
   const publicName = post.is_anonymous && !isAdmin ? "Member" : post.author_name;
+  const birthdayBody = isBirthday
+    ? post.body.replace("Joy House is celebrating", "House of Joy is celebrating")
+    : post.body;
+
+  useEffect(() => {
+    if (!isBirthday) return;
+    const el = cardRef.current;
+    if (!el) return;
+    let timer: number | undefined;
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function play() {
+      setHooray(false);
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => setHooray(true));
+      });
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          play();
+          if (!prefersReduced && !timer) {
+            timer = window.setInterval(play, 7000);
+          }
+        } else if (timer) {
+          window.clearInterval(timer);
+          timer = undefined;
+        }
+      },
+      { threshold: 0.2 }
+    );
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      if (timer) window.clearInterval(timer);
+    };
+  }, [isBirthday]);
 
   useEffect(() => {
     if (editing && !canEdit) setEditing(false);
@@ -70,7 +110,27 @@ export function PostCard({
   }
 
   return (
-    <article className={`post-card${isBirthday ? " birthday-card" : ""}`}>
+    <article
+      ref={cardRef}
+      className={`post-card${isBirthday ? " birthday-card" : ""}`}
+    >
+      {isBirthday ? (
+        <>
+          <div className="birthday-balloons" aria-hidden="true">
+            <span className="balloon b1" />
+            <span className="balloon b2" />
+            <span className="balloon b3" />
+            <span className="balloon b4" />
+            <span className="balloon b5" />
+          </div>
+          <div className={`birthday-hooray${hooray ? " burst" : ""}`} aria-hidden="true">
+            <span className="hooray-word">Hooray!</span>
+            {Array.from({ length: 18 }, (_, index) => (
+              <span className={`confetti c${index + 1}`} key={index} />
+            ))}
+          </div>
+        </>
+      ) : null}
       {error ? <div className="banner-error">{error}</div> : null}
       <div className="post-header">
         <UserAvatar
@@ -166,7 +226,7 @@ export function PostCard({
       ) : (
         <a href={`/posts/${post.id}`}>
           <h2 className="post-title">{post.title}</h2>
-          {post.body ? <p className="post-body">{post.body}</p> : <div className="post-body" />}
+          {birthdayBody ? <p className="post-body">{birthdayBody}</p> : <div className="post-body" />}
         </a>
       )}
       {post.image_url ? <PostImage src={post.image_url} alt="" /> : null}
@@ -180,7 +240,7 @@ export function PostCard({
         <button className="action-btn" type="button" onClick={() => setReportOpen(true)}>
           <IconFlag size={15} /> Report
         </button>
-        {isAdmin ? (
+        {isAdmin && !isBirthday ? (
           <button
             className="action-btn"
             type="button"

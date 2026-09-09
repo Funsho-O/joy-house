@@ -234,7 +234,7 @@ begin
         insert into public.posts (title, body, category, author_id, is_anonymous, is_birthday)
         values (
           'Happy birthday, ' || person.display_name || '!',
-          'Joy House is celebrating ' || person.display_name ||
+          'House of Joy is celebrating ' || person.display_name ||
             ' today. Leave a comment to wish them a blessed year ahead.',
           'Events',
           person.id,
@@ -293,3 +293,7 @@ begin
 exception when others then
   raise notice 'pg_cron is not available. Use the Vercel daily cron instead.';
 end $$;
+
+update public.posts
+set body = replace(body, 'Joy House is celebrating', 'House of Joy is celebrating')
+where coalesce(is_birthday, false);

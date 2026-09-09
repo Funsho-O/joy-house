@@ -76,3 +76,20 @@ export function buildDateOfBirth(monthRaw: string, dayRaw: string, yearRaw: stri
 
   return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
+
+export function pretoriaDateKey(value?: string | number | Date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Africa/Johannesburg",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(value ? new Date(value) : new Date());
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+  return `${year}-${month}-${day}`;
+}
+
+export function isBirthdayToday(post: { is_birthday?: boolean; created_at: string }) {
+  return Boolean(post.is_birthday) && pretoriaDateKey(post.created_at) === pretoriaDateKey();
+}
