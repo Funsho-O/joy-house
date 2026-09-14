@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { BIRTHDAY_MONTHS, buildDateOfBirth } from "@/lib/birthday";
 import { siteUrl } from "@/lib/format";
 
 function GoogleIcon() {
@@ -34,12 +35,22 @@ export function AuthForm({ mode, notice }: { mode: "login" | "signup"; notice?: 
 
     try {
       if (isSignup) {
+        const dateOfBirth = buildDateOfBirth(
+          String(form.get("birth_month") || ""),
+          String(form.get("birth_day") || ""),
+          String(form.get("birth_year") || "")
+        );
+        const celebrate = Boolean(dateOfBirth) && String(form.get("celebrate_birthday") || "") === "true";
         const { error: signError } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${siteUrl()}/auth/callback`,
-            data: { display_name: displayName },
+            data: {
+              display_name: displayName,
+              date_of_birth: dateOfBirth,
+              celebrate_birthday: celebrate,
+            },
           },
         });
         if (signError) throw signError;
@@ -96,6 +107,69 @@ export function AuthForm({ mode, notice }: { mode: "login" | "signup"; notice?: 
           </label>
           <input className="form-input" id="password" name="password" type="password" minLength={8} required />
         </div>
+        {isSignup ? (
+          <>
+            <div className="form-row">
+              <p className="form-label" id="signup-birthday-label">
+                Birthday
+              </p>
+              <div className="birthday-fields" role="group" aria-labelledby="signup-birthday-label">
+                <label className="sr-only" htmlFor="birth_month">
+                  Month
+                </label>
+                <select className="form-input" id="birth_month" name="birth_month" defaultValue="">
+                  <option value="">Month</option>
+                  {BIRTHDAY_MONTHS.map((month) => (
+                    <option key={month.value} value={String(month.value)}>
+                      {month.label}
+                    </option>
+                  ))}
+                </select>
+                <label className="sr-only" htmlFor="birth_day">
+                  Day
+                </label>
+                <select className="form-input" id="birth_day" name="birth_day" defaultValue="">
+                  <option value="">Day</option>
+                  {Array.from({ length: 31 }, (_, index) => index + 1).map((day) => (
+                    <option key={day} value={String(day)}>
+                      {day}
+                    </option>
+                  ))}
+                </select>
+                <label className="sr-only" htmlFor="birth_year">
+                  Year (optional)
+                </label>
+                <input
+                  className="form-input"
+                  id="birth_year"
+                  name="birth_year"
+                  inputMode="numeric"
+                  maxLength={4}
+                  placeholder="Year (optional)"
+                  autoComplete="off"
+                />
+              </div>
+              <p className="anon-hint">Optional — skip if you prefer</p>
+            </div>
+            <div className="form-row">
+              <p className="form-label">Birthday privacy</p>
+              <div className="anon-options" role="radiogroup" aria-label="Birthday privacy">
+                <label className="anon-option">
+                  <input type="radio" name="celebrate_birthday" value="true" />
+                  Celebrate my birthday publicly
+                </label>
+                <label className="anon-option">
+                  <input type="radio" name="celebrate_birthday" value="false" defaultChecked />
+                  Keep private
+                </label>
+              </div>
+              <p className="anon-hint">
+                Public posts go on the feed with your name and photo. Private birthdays are only shown to admins.
+                You can add or change this later from your profile.
+              </p>
+            </div>
+          </>
+        ) : null}
         <button className="submit-btn" type="submit" disabled={pending}>
           {pending ? "Please wait..." : isSignup ? "Create account" : "Sign in"}
         </button>

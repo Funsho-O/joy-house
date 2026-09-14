@@ -127,8 +127,25 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  dob date;
+  celebrate boolean := false;
+  dob_text text;
 begin
-  insert into public.profiles (id, display_name, avatar_url)
+  dob_text := nullif(trim(new.raw_user_meta_data->>'date_of_birth'), '');
+  if dob_text is not null then
+    begin
+      dob := dob_text::date;
+    exception when others then
+      dob := null;
+    end;
+  end if;
+
+  celebrate :=
+    dob is not null
+    and lower(coalesce(new.raw_user_meta_data->>'celebrate_birthday', 'false')) in ('true', 't', '1');
+
+  insert into public.profiles (id, display_name, avatar_url, date_of_birth, celebrate_birthday)
   values (
     new.id,
     coalesce(
@@ -136,7 +153,9 @@ begin
       nullif(trim(new.raw_user_meta_data->>'full_name'), ''),
       split_part(new.email, '@', 1)
     ),
-    new.raw_user_meta_data->>'avatar_url'
+    new.raw_user_meta_data->>'avatar_url',
+    dob,
+    celebrate
   );
   return new;
 end;

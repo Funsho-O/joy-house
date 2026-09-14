@@ -34,11 +34,10 @@ export function Feed({
         ),
     [posts]
   );
-  const birthdayIds = useMemo(() => new Set(birthdayToday.map((post) => post.id)), [birthdayToday]);
-  const pinned = posts.filter((post) => post.is_pinned && !birthdayIds.has(post.id)).slice(0, 3);
+  const pinned = posts.filter((post) => post.is_pinned && !post.is_birthday).slice(0, 3);
   const showBirthdays = birthdayToday.length > 0 && (filter === "All" || filter === "Events" || filter === "Trending");
   const visible = useMemo(() => {
-    let list = posts.filter((post) => !post.is_pinned && !birthdayIds.has(post.id));
+    let list = posts.filter((post) => !post.is_pinned && !post.is_birthday);
     if (filter === "Trending") {
       list = [...list].sort(
         (a, b) => b.likes_last_24h - a.likes_last_24h || b.like_count - a.like_count
@@ -47,7 +46,7 @@ export function Feed({
       list = list.filter((post) => post.category === filter);
     }
     return list;
-  }, [posts, filter, birthdayIds]);
+  }, [posts, filter]);
 
   return (
     <>

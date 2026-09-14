@@ -18,7 +18,7 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Leaderboard (This Week / All Time): 1 point per named post, comment, and like received on a named post; anonymous posts do not count
 - Profile badges for First Post, Prayer Warrior, Encourager, Trending, Faithful, and Most Loved
 - Admins get an activity dashboard with weekly engagement, quiet-member follow-up flags, and CSV export
-- Optional birthdays (month and day; year is optional): public feed celebrations, or a private admin-only notice. System birthday posts do not count on the leaderboard
+- Optional birthdays (month and day; year is optional) on signup or later from Profile: public feed celebrations, or a private admin-only notice. System birthday posts do not count on the leaderboard
 - Admins can pin up to 3 posts, delete any post/comment, unmask anonymous authors, review reports, open edit history, and deactivate accounts
 - Deactivating an account (from Profile, Admin members, or the Supabase Auth dashboard) keeps posts and comments, and shows the author as Former Member
 - Rate limit: 5 posts per member per hour
@@ -47,9 +47,10 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 12. If this project already existed before group comment edits, also run `supabase/edit-group-comments.sql`.
 13. If this project already existed before the leaderboard and badges, also run `supabase/activity.sql`.
 14. If this project already existed before birthday celebrations, also run `supabase/birthdays.sql`.
-15. If this project already existed before account deactivation, also run `supabase/soft-delete-accounts.sql`.
-16. If this project already existed before in-app notifications, also run `supabase/notifications.sql`.
-17. After you sign up, promote yourself:
+15. If this project already existed before birthday fields on email signup, also run `supabase/birthday-signup.sql`.
+16. If this project already existed before account deactivation, also run `supabase/soft-delete-accounts.sql`.
+17. If this project already existed before in-app notifications, also run `supabase/notifications.sql`.
+18. After you sign up, promote yourself:
 
 ```sql
 update public.profiles

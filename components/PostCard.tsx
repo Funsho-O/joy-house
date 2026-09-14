@@ -14,6 +14,7 @@ import {
 import { deletePost, toggleLike, togglePin, updatePost } from "@/app/actions/posts";
 import { EmojiPickerButton, insertIntoValue } from "@/components/EmojiPickerButton";
 import { useEditWindow } from "@/components/EditWindowNote";
+import { isBirthdayToday } from "@/lib/birthday";
 import { categoryClass } from "@/lib/format";
 import type { PostCardData, Profile } from "@/lib/types";
 import { ReportModal } from "@/components/ReportModal";
@@ -46,6 +47,7 @@ export function PostCard({
   const cardRef = useRef<HTMLElement>(null);
   const [hooray, setHooray] = useState(false);
   const isBirthday = Boolean(post.is_birthday);
+  const celebratingToday = isBirthdayToday(post);
   const isAdmin = profile.role === "admin";
   const isOwner = post.author_id === profile.id;
   const editWindow = useEditWindow(post.created_at, isOwner && !isBirthday);
@@ -57,7 +59,7 @@ export function PostCard({
     : post.body;
 
   useEffect(() => {
-    if (!isBirthday) return;
+    if (!celebratingToday) return;
     const el = cardRef.current;
     if (!el) return;
     let timer: number | undefined;
@@ -89,7 +91,7 @@ export function PostCard({
       observer.disconnect();
       if (timer) window.clearInterval(timer);
     };
-  }, [isBirthday]);
+  }, [celebratingToday]);
 
   useEffect(() => {
     if (editing && !canEdit) setEditing(false);
@@ -112,9 +114,9 @@ export function PostCard({
   return (
     <article
       ref={cardRef}
-      className={`post-card${isBirthday ? " birthday-card" : ""}`}
+      className={`post-card${celebratingToday ? " birthday-card" : ""}`}
     >
-      {isBirthday ? (
+      {celebratingToday ? (
         <>
           <div className="birthday-balloons" aria-hidden="true">
             <span className="balloon b1" />
@@ -137,7 +139,7 @@ export function PostCard({
           name={publicName}
           src={post.author_avatar_url}
           anonymous={post.is_anonymous && !isAdmin}
-          className={isBirthday ? "post-avatar birthday-avatar" : "post-avatar"}
+          className={celebratingToday ? "post-avatar birthday-avatar" : "post-avatar"}
         />
         <div className="post-meta">
           <div className="post-author">
@@ -148,19 +150,19 @@ export function PostCard({
             ) : (
               publicName
             )}
-            {isBirthday ? (
+            {celebratingToday ? (
               <span className="post-tag tag-events">Birthday</span>
             ) : (
               <span className={`post-tag ${categoryClass(post.category)}`}>{post.category}</span>
             )}
           </div>
           <div className="post-time">
-            {isBirthday ? "Celebrating today" : <RelativeTime iso={post.created_at} />}
+            {celebratingToday ? "Celebrating today" : <RelativeTime iso={post.created_at} />}
             <EditedLabel at={post.edited_at} isAdmin={isAdmin} onOpen={() => setHistoryOpen(true)} />
             {editWindow.note ? <span className="edit-window-note">{editWindow.note}</span> : null}
           </div>
         </div>
-        {isBirthday ? (
+        {celebratingToday ? (
           <span className="birthday-badge">
             <IconCake size={14} /> Birthday
           </span>
