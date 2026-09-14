@@ -102,29 +102,18 @@ export default async function ProfilePage({
             )}
           </div>
           <div className="form-row">
-            <p className="form-label">Birthday privacy</p>
-            <div className="anon-options" role="radiogroup" aria-label="Birthday privacy">
-              <label className={`anon-option${profile.celebrate_birthday ? " selected" : ""}`}>
-                <input
-                  type="radio"
-                  name="celebrate_birthday"
-                  value="true"
-                  defaultChecked={profile.celebrate_birthday}
-                />
-                Celebrate my birthday publicly
-              </label>
-              <label className={`anon-option${!profile.celebrate_birthday ? " selected" : ""}`}>
-                <input
-                  type="radio"
-                  name="celebrate_birthday"
-                  value="false"
-                  defaultChecked={!profile.celebrate_birthday}
-                />
-                Keep private
-              </label>
-            </div>
+            <label className="check-option">
+              <input
+                type="checkbox"
+                name="celebrate_birthday"
+                value="true"
+                defaultChecked={profile.celebrate_birthday}
+              />
+              Celebrate my birthday publicly
+            </label>
             <p className="anon-hint">
-              Public posts go on the feed with your name and photo. Private birthdays are only shown to admins.
+              Leave unchecked to keep private. Public posts go on the feed with your name and photo. Private
+              birthdays are only shown to admins.
             </p>
           </div>
           <p className="form-label">Role: {profile.role === "admin" ? "Admin" : "Member"}</p>

@@ -152,20 +152,13 @@ export function AuthForm({ mode, notice }: { mode: "login" | "signup"; notice?: 
               <p className="anon-hint">Optional — skip if you prefer</p>
             </div>
             <div className="form-row">
-              <p className="form-label">Birthday privacy</p>
-              <div className="anon-options" role="radiogroup" aria-label="Birthday privacy">
-                <label className="anon-option">
-                  <input type="radio" name="celebrate_birthday" value="true" />
-                  Celebrate my birthday publicly
-                </label>
-                <label className="anon-option">
-                  <input type="radio" name="celebrate_birthday" value="false" defaultChecked />
-                  Keep private
-                </label>
-              </div>
+              <label className="check-option">
+                <input type="checkbox" name="celebrate_birthday" value="true" />
+                Celebrate my birthday publicly
+              </label>
               <p className="anon-hint">
-                Public posts go on the feed with your name and photo. Private birthdays are only shown to admins.
-                You can add or change this later from your profile.
+                Leave unchecked to keep private. Public posts go on the feed with your name and photo. Private
+                birthdays are only shown to admins. You can add or change this later from your profile.
               </p>
             </div>
           </>
