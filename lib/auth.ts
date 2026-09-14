@@ -9,6 +9,7 @@ function withProfileDefaults(row: {
   push_enabled?: boolean | null;
   date_of_birth?: string | null;
   celebrate_birthday?: boolean | null;
+  announce_arrival?: boolean | null;
   deactivated_at?: string | null;
 }): Profile {
   return {
@@ -19,6 +20,7 @@ function withProfileDefaults(row: {
     push_enabled: row.push_enabled ?? true,
     date_of_birth: row.date_of_birth || null,
     celebrate_birthday: Boolean(row.celebrate_birthday),
+    announce_arrival: Boolean(row.announce_arrival),
     deactivated_at: row.deactivated_at || null,
   };
 }
@@ -34,7 +36,7 @@ export async function getAuthContext() {
   let profile: Profile | null = null;
   const full = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url, role, push_enabled, date_of_birth, celebrate_birthday, deactivated_at")
+    .select("id, display_name, avatar_url, role, push_enabled, date_of_birth, celebrate_birthday, announce_arrival, deactivated_at")
     .eq("id", user.id)
     .maybeSingle();
 

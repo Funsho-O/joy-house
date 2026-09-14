@@ -442,6 +442,7 @@ button, input, textarea, select { font-family: inherit; }
 .tag-prayer { background: #FFE0E8; color: #7A0040; }
 .tag-bible { background: #E0F4E8; color: #0A5A28; }
 .tag-events { background: #FEF0D0; color: #7A4000; }
+.tag-welcome { background: var(--blue-bg); color: var(--blue); }
 .tag-general { background: var(--surface-1); color: var(--text-secondary); border: 0.5px solid var(--border); }
 .anon-badge {
   font-size: 11px;
@@ -1323,6 +1324,27 @@ button, input, textarea, select { font-family: inherit; }
   flex-shrink: 0;
 }
 .birthday-admin { margin-bottom: 18px; }
+.welcome-card {
+  border-color: var(--blue-mid);
+  background: linear-gradient(180deg, #EBF2FC 0%, var(--surface-2) 56px);
+}
+.welcome-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: var(--blue-bg);
+  color: var(--blue);
+  flex-shrink: 0;
+}
+.welcome-admin-label {
+  margin-left: 6px;
+  font-weight: 700;
+  color: var(--blue);
+}
 
 @media (max-width: 520px) {
   body { padding: 0.85rem 0.7rem 1.5rem; }

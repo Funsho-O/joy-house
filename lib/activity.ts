@@ -112,6 +112,7 @@ export async function fetchMemberProfile(userId: string): Promise<Profile | null
         push_enabled: retry.data.push_enabled ?? true,
         date_of_birth: null,
         celebrate_birthday: false,
+        announce_arrival: false,
         deactivated_at: null,
       } as Profile;
     }
@@ -123,6 +124,7 @@ export async function fetchMemberProfile(userId: string): Promise<Profile | null
     push_enabled: data.push_enabled ?? true,
     date_of_birth: null,
     celebrate_birthday: false,
+    announce_arrival: false,
     deactivated_at: data.deactivated_at || null,
   } as Profile;
 }

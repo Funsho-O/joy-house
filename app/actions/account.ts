@@ -51,15 +51,20 @@ export async function updateProfile(formData: FormData) {
   );
 
   const celebrate = String(formData.get("celebrate_birthday") || "") === "true";
+  const announceArrival = String(formData.get("announce_arrival") || "") === "true";
   const { error } = await supabase
     .from("profiles")
     .update({
       display_name: displayName,
       date_of_birth: dateOfBirth,
       celebrate_birthday: celebrate,
+      announce_arrival: announceArrival,
     })
     .eq("id", profile.id);
   if (error) {
+    if (/announce_arrival/i.test(error.message)) {
+      throw new Error("Welcome posts are not set up yet. In Supabase, run supabase/welcome-posts.sql.");
+    }
     if (/date_of_birth|celebrate_birthday|schema cache/i.test(error.message)) {
       throw new Error("Birthday settings are not set up yet. In Supabase, run supabase/birthdays.sql.");
     }

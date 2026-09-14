@@ -10,6 +10,7 @@ import {
   IconTrash,
   IconCake,
   IconFlag,
+  IconUserPlus,
 } from "@tabler/icons-react";
 import { deletePost, toggleLike, togglePin, updatePost } from "@/app/actions/posts";
 import { EmojiPickerButton, insertIntoValue } from "@/components/EmojiPickerButton";
@@ -47,12 +48,14 @@ export function PostCard({
   const cardRef = useRef<HTMLElement>(null);
   const [hooray, setHooray] = useState(false);
   const isBirthday = Boolean(post.is_birthday);
+  const isWelcome = Boolean(post.is_welcome);
+  const isSystemPost = isBirthday || isWelcome;
   const celebratingToday = isBirthdayToday(post);
   const isAdmin = profile.role === "admin";
   const isOwner = post.author_id === profile.id;
-  const editWindow = useEditWindow(post.created_at, isOwner && !isBirthday);
-  const canEdit = isOwner && editWindow.canEdit && !isBirthday;
-  const canDelete = isAdmin || (isOwner && !isBirthday);
+  const editWindow = useEditWindow(post.created_at, isOwner && !isSystemPost);
+  const canEdit = isOwner && editWindow.canEdit && !isSystemPost;
+  const canDelete = isAdmin || (isOwner && !isSystemPost);
   const publicName = post.is_anonymous && !isAdmin ? "Member" : post.author_name;
   const birthdayBody = isBirthday
     ? post.body.replace("Joy House is celebrating", "House of Joy is celebrating")
@@ -114,7 +117,7 @@ export function PostCard({
   return (
     <article
       ref={cardRef}
-      className={`post-card${celebratingToday ? " birthday-card" : ""}`}
+      className={`post-card${celebratingToday ? " birthday-card" : ""}${isWelcome ? " welcome-card" : ""}`}
     >
       {celebratingToday ? (
         <>
@@ -152,12 +155,15 @@ export function PostCard({
             )}
             {celebratingToday ? (
               <span className="post-tag tag-events">Birthday</span>
+            ) : isWelcome ? (
+              <span className="post-tag tag-welcome">Welcome</span>
             ) : (
               <span className={`post-tag ${categoryClass(post.category)}`}>{post.category}</span>
             )}
           </div>
           <div className="post-time">
-            {celebratingToday ? "Celebrating today" : <RelativeTime iso={post.created_at} />}
+            {celebratingToday ? "Celebrating today" : isWelcome ? "Just joined" : <RelativeTime iso={post.created_at} />}
+            {isWelcome && isAdmin ? <span className="welcome-admin-label">Welcome post</span> : null}
             <EditedLabel at={post.edited_at} isAdmin={isAdmin} onOpen={() => setHistoryOpen(true)} />
             {editWindow.note ? <span className="edit-window-note">{editWindow.note}</span> : null}
           </div>
@@ -165,6 +171,11 @@ export function PostCard({
         {celebratingToday ? (
           <span className="birthday-badge">
             <IconCake size={14} /> Birthday
+          </span>
+        ) : null}
+        {isWelcome ? (
+          <span className="welcome-badge">
+            <IconUserPlus size={14} /> Welcome
           </span>
         ) : null}
         {post.is_anonymous ? <span className="anon-badge">Anonymous</span> : null}
@@ -242,7 +253,7 @@ export function PostCard({
         <button className="action-btn" type="button" onClick={() => setReportOpen(true)}>
           <IconFlag size={15} /> Report
         </button>
-        {isAdmin && !isBirthday ? (
+        {isAdmin && !isSystemPost ? (
           <button
             className="action-btn"
             type="button"

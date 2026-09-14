@@ -53,9 +53,14 @@ export async function updatePost(formData: FormData) {
   if (!id || !title) throw new Error("Title is required.");
   assertCleanText(title, body);
 
-  const { data: existing } = await supabase.from("posts").select("created_at, author_id").eq("id", id).maybeSingle();
+  const { data: existing } = await supabase
+    .from("posts")
+    .select("created_at, author_id, is_birthday, is_welcome")
+    .eq("id", id)
+    .maybeSingle();
   if (!existing) throw new Error("Post not found.");
   if (existing.author_id !== profile.id) throw new Error("You can only edit your own post.");
+  if (existing.is_birthday || existing.is_welcome) throw new Error("This post cannot be edited.");
   assertEditable(existing.created_at);
 
   const { error } = await supabase.from("posts").update({ title, body }).eq("id", id).eq("author_id", profile.id);

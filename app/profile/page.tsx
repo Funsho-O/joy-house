@@ -116,6 +116,21 @@ export default async function ProfilePage({
               birthdays are only shown to admins.
             </p>
           </div>
+          <div className="form-row">
+            <label className="check-option">
+              <input
+                type="checkbox"
+                name="announce_arrival"
+                value="true"
+                defaultChecked={profile.announce_arrival}
+              />
+              Announce my arrival to the community
+            </label>
+            <p className="anon-hint">
+              We’ll introduce you on the feed with your name and photo if you joined recently. The post comes down
+              after 24 hours.
+            </p>
+          </div>
           <p className="form-label">Role: {profile.role === "admin" ? "Admin" : "Member"}</p>
           <button className="submit-btn" type="submit">
             Save

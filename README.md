@@ -19,6 +19,7 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 - Profile badges for First Post, Prayer Warrior, Encourager, Trending, Faithful, and Most Loved
 - Admins get an activity dashboard with weekly engagement, quiet-member follow-up flags, and CSV export
 - Optional birthdays (month and day; year is optional) on signup or later from Profile: public feed celebrations, or a private admin-only notice. System birthday posts do not count on the leaderboard
+- Optional welcome posts when a new member opts in from Profile: appear on the feed immediately, then come down after 24 hours. They do not count on the leaderboard
 - Admins can pin up to 3 posts, delete any post/comment, unmask anonymous authors, review reports, open edit history, and deactivate accounts
 - Deactivating an account (from Profile, Admin members, or the Supabase Auth dashboard) keeps posts and comments, and shows the author as Former Member
 - Rate limit: 5 posts per member per hour
@@ -50,7 +51,8 @@ This app is separate from ODIN Insights. Stack: **Next.js (React)** + **Supabase
 15. If this project already existed before birthday fields on email signup, also run `supabase/birthday-signup.sql`.
 16. If this project already existed before account deactivation, also run `supabase/soft-delete-accounts.sql`.
 17. If this project already existed before in-app notifications, also run `supabase/notifications.sql`.
-18. After you sign up, promote yourself:
+18. If this project already existed before welcome posts, also run `supabase/welcome-posts.sql`.
+19. After you sign up, promote yourself:
 
 ```sql
 update public.profiles
@@ -102,7 +104,7 @@ Open [http://localhost:3000](http://localhost:3000).
 4. In Supabase, add the production Site URL and `/auth/callback` redirect.
 5. Point the Cloudflare domain to Vercel (CNAME to `cname.vercel-dns.com`, or Cloudflare for SaaS). HTTPS is automatic on Vercel.
 
-Birthday posts are created once a day at 06:00 Pretoria time (`0 4 * * *` UTC) by Vercel Cron (`/api/cron/birthdays`) and, if your Supabase project allows it, `pg_cron`. Admins can also press **Check today** on the Admin queue. System birthday posts do not count on the leaderboard.
+Birthday posts are created once a day at 06:00 Pretoria time (`0 4 * * *` UTC) by Vercel Cron (`/api/cron/birthdays`) and, if your Supabase project allows it, `pg_cron`. That same job deletes welcome posts older than 24 hours and birthday posts from previous Pretoria days. Admins can also press **Check today** on the Admin queue. System birthday and welcome posts do not count on the leaderboard.
 
 ## Security model
 

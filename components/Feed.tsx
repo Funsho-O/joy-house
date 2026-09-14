@@ -8,6 +8,7 @@ import { Navbar } from "@/components/Navbar";
 import { Composer } from "@/components/Composer";
 import { PostCard } from "@/components/PostCard";
 import { isBirthdayToday } from "@/lib/birthday";
+import { isWelcomeLive } from "@/lib/welcome";
 
 const FILTERS = ["All", ...CATEGORIES, "Trending"] as const;
 
@@ -34,10 +35,15 @@ export function Feed({
         ),
     [posts]
   );
-  const pinned = posts.filter((post) => post.is_pinned && !post.is_birthday).slice(0, 3);
+  const pinned = posts.filter((post) => post.is_pinned && !post.is_birthday && !post.is_welcome).slice(0, 3);
   const showBirthdays = birthdayToday.length > 0 && (filter === "All" || filter === "Events" || filter === "Trending");
   const visible = useMemo(() => {
-    let list = posts.filter((post) => !post.is_pinned && !post.is_birthday);
+    let list = posts.filter(
+      (post) =>
+        !post.is_pinned &&
+        !post.is_birthday &&
+        (!post.is_welcome || isWelcomeLive(post))
+    );
     if (filter === "Trending") {
       list = [...list].sort(
         (a, b) => b.likes_last_24h - a.likes_last_24h || b.like_count - a.like_count

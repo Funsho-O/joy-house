@@ -15,6 +15,7 @@ type VisiblePost = {
   author_id: string | null;
   admin_author_id: string | null;
   is_birthday?: boolean;
+  is_welcome?: boolean;
 };
 
 type CommentRow = {
@@ -135,6 +136,7 @@ async function hydratePosts(
       image_url: row.image_url || null,
       edited_at: row.edited_at || null,
       is_birthday: Boolean(row.is_birthday),
+      is_welcome: Boolean(row.is_welcome),
     };
   });
 }

@@ -118,16 +118,17 @@ export async function fetchDirectory(): Promise<Profile[]> {
     if (/deactivated_at|schema cache/i.test(error.message)) {
       const retry = await supabase.from("profiles").select("id, display_name, avatar_url, role").order("display_name");
       if (retry.error) throw new Error(retry.error.message);
-      return (retry.data || []).map((row) => ({ ...row, push_enabled: true, date_of_birth: null, celebrate_birthday: false, deactivated_at: null })) as Profile[];
+      return (retry.data || []).map((row) => ({ ...row, push_enabled: true, date_of_birth: null, celebrate_birthday: false, announce_arrival: false, deactivated_at: null })) as Profile[];
     }
     throw new Error(error.message);
   }
-  return ((data || []) as Omit<Profile, "push_enabled" | "date_of_birth" | "celebrate_birthday" | "deactivated_at">[]).map(
+  return ((data || []) as Omit<Profile, "push_enabled" | "date_of_birth" | "celebrate_birthday" | "announce_arrival" | "deactivated_at">[]).map(
     (row) => ({
       ...row,
       push_enabled: true,
       date_of_birth: null,
       celebrate_birthday: false,
+      announce_arrival: false,
       deactivated_at: null,
     })
   );

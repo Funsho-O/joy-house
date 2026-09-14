@@ -11,6 +11,7 @@ export type Profile = {
   push_enabled: boolean;
   date_of_birth: string | null;
   celebrate_birthday: boolean;
+  announce_arrival: boolean;
   deactivated_at: string | null;
 };
 
@@ -41,6 +42,7 @@ export type PostCardData = {
   image_url: string | null;
   edited_at: string | null;
   is_birthday: boolean;
+  is_welcome: boolean;
 };
 
 export type PostRevision = {
