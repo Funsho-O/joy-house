@@ -1,16 +1,34 @@
+import { pretoriaDateKey } from "@/lib/birthday";
+
+function pretoraCalendarDaysAgo(iso: string) {
+  const posted = pretoriaDateKey(iso);
+  const today = pretoriaDateKey();
+  const [postedYear, postedMonth, postedDay] = posted.split("-").map(Number);
+  const [todayYear, todayMonth, todayDay] = today.split("-").map(Number);
+  const postedUtc = Date.UTC(postedYear, postedMonth - 1, postedDay);
+  const todayUtc = Date.UTC(todayYear, todayMonth - 1, todayDay);
+  return Math.round((todayUtc - postedUtc) / 86400000);
+}
+
 export function relativeTime(iso: string) {
   const date = new Date(iso);
-  const now = Date.now();
-  const diff = Math.max(0, now - date.getTime());
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return "Yesterday";
-  if (days < 7) return `${days} days ago`;
-  return date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  const calendarDays = pretoraCalendarDaysAgo(iso);
+  if (calendarDays <= 0) {
+    const diff = Math.max(0, Date.now() - date.getTime());
+    const minutes = Math.floor(diff / 60000);
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  }
+  if (calendarDays === 1) return "Yesterday";
+  if (calendarDays < 7) return `${calendarDays} days ago`;
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Africa/Johannesburg",
+  });
 }
 
 export function initials(name: string) {
