@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { IconFlame, IconPin } from "@tabler/icons-react";
 import { CATEGORIES } from "@/lib/types";
 import type { GroupSummary, PostCardData, Profile } from "@/lib/types";
@@ -23,6 +23,12 @@ export function Feed({
 }) {
   const [composerOpen, setComposerOpen] = useState(false);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("All");
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(Date.now()), 30000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const birthdayToday = useMemo(
     () =>
@@ -52,7 +58,7 @@ export function Feed({
       list = list.filter((post) => post.category === filter);
     }
     return list;
-  }, [posts, filter]);
+  }, [posts, filter, now]);
 
   return (
     <>

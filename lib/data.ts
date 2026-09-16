@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { BirthdayAlert, Category, CommentNode, PostCardData, PreviewComment, Profile, ReportItem } from "@/lib/types";
+import { isWelcomeLive } from "@/lib/welcome";
 
 type VisiblePost = {
   id: string;
@@ -149,7 +150,8 @@ export async function fetchFeed(userId: string, isAdmin: boolean) {
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
-  return hydratePosts((data || []) as VisiblePost[], userId, isAdmin);
+  const posts = await hydratePosts((data || []) as VisiblePost[], userId, isAdmin);
+  return posts.filter((post) => !post.is_welcome || isWelcomeLive(post));
 }
 
 export async function fetchPost(id: string, userId: string, isAdmin: boolean) {

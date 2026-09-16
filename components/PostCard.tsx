@@ -162,7 +162,7 @@ export function PostCard({
             )}
           </div>
           <div className="post-time">
-            {celebratingToday ? "Celebrating today" : isWelcome ? "Just joined" : <RelativeTime iso={post.created_at} />}
+            {celebratingToday ? "Celebrating today" : <RelativeTime iso={post.created_at} />}
             {isWelcome && isAdmin ? <span className="welcome-admin-label">Welcome post</span> : null}
             <EditedLabel at={post.edited_at} isAdmin={isAdmin} onOpen={() => setHistoryOpen(true)} />
             {editWindow.note ? <span className="edit-window-note">{editWindow.note}</span> : null}
